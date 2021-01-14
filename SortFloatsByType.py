@@ -5,8 +5,6 @@ Created on Sun Jun 21 10:05:33 2020
 
 @author: Ellen
 """
-
-import netCDF4
 import matplotlib.pyplot as plt
 import numpy as np
 import cartopy as ct
@@ -37,6 +35,12 @@ BC=[]
 Other=[]
 AllFloats=[]
 
+Irm_DACWMO=[]
+Lab_DACWMO=[]
+BC_DACWMO=[]
+Other_DACWMO=[]
+AllFloats_DACWMO=[]
+
 print('Start of file reading...')
 with open(Argofiles) as fp:
     Lines = fp.readlines()
@@ -52,12 +56,14 @@ fname_list=[]
 
 for i in floatnumlist:
     floatfname=i
-    fname_t=glob.glob('/Users/Ellen/Desktop/ArgoGDAC/dac/'+floatfname+'/*_prof.nc')
+    fname_t=glob.glob('/Users/Ellen/Desktop/ArgoGDAC/dac/'+floatfname+'/*_Sprof.nc')
     #print('this is f_namet:',fname_t)
     fname_list=fname_list + fname_t
 
-#print(fname_list)
-for BGCfile in fname_list:
+
+for i in np.arange(len(fname_list)):
+    BGCfile=fname_list[i]
+    DAC_WMO=ArgoNum[i]
 
     # MR - merged file (US) | SR - merged file (?) (FR)
     # B - bio
@@ -114,42 +120,81 @@ for BGCfile in fname_list:
 
         if var_int == '1':
             Lab=Lab+[titlename]
+            Lab_DACWMO=Lab_DACWMO+[DAC_WMO]
+            
             AllFloats=AllFloats+[titlename]
+            AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
             check = 1
         elif var_int == '2':
             Irm=Irm+[titlename]
+            Irm_DACWMO=Irm_DACWMO+[DAC_WMO]
+            
             AllFloats=AllFloats+[titlename]
+            AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
             check=1
         elif var_int == '3':
             BC=BC+[titlename]
+            BC_DACWMO=BC_DACWMO+[DAC_WMO]
+            
             AllFloats=AllFloats+[titlename]
+            AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
             check=1
         elif var_int == '4':
             Other=Other+[titlename]
+            Other_DACWMO=Other_DACWMO+[DAC_WMO]
+            
             AllFloats=AllFloats+[titlename]
+            AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
+            
             check=1
         elif var_int == '5':
             check=1
 
     plt.clf()
+    
+#################
+## Save by WMO ##
+#################
 
-
-with open(Dir1+'Sorted_LabradorSeaFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_LabradorSeaFloats.txt','w') as f:
     for ele in Lab:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_BCFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_BCFloats.txt','w') as f:
     for ele in BC:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_IrmingerFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_IrmingerFloats.txt','w') as f:
     for ele in Irm:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_OtherFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_OtherFloats.txt','w') as f:
     for ele in Other:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_AllFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_AllFloats.txt','w') as f:
     for ele in AllFloats:
+        f.write(ele+'\n')
+        
+#####################
+## Save by DAC/WMO ##
+######################
+with open(Dir1+'Sorted_DACWMO_LabradorSeaFloats.txt','w') as f:
+    for ele in Lab_DACWMO:
+        f.write(ele+'\n')
+
+with open(Dir1+'Sorted_DACWMO_BCFloats.txt','w') as f:
+    for ele in BC_DACWMO:
+        f.write(ele+'\n')
+
+with open(Dir1+'Sorted_DACWMO_IrmingerFloats.txt','w') as f:
+    for ele in Irm_DACWMO:
+        f.write(ele+'\n')
+
+with open(Dir1+'Sorted_DACWMO_OtherFloats.txt','w') as f:
+    for ele in Other_DACWMO:
+        f.write(ele+'\n')
+
+with open(Dir1+'Sorted_DACWMO_AllFloats.txt','w') as f:
+    for ele in AllFloats_DACWMO:
         f.write(ele+'\n')
