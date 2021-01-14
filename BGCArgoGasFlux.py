@@ -282,7 +282,7 @@ for WMO in floatlist:
     
     plt.subplots_adjust(hspace=0.5)
     figs.suptitle('Surface Values Interpolated for Float '+str(WMO))
-    figs.subplots_adjust(bottom=0.5)
+    figs.subplots_adjust(bottom=0.2)
     plt.savefig(FigDir+str(WMO)+'_Surface_STO_Interpolated.jpg')
     plt.close()
     
