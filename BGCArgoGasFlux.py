@@ -58,6 +58,7 @@ surfP_var=3  # dbar
 minsurfP=surfP_val-surfP_var
 maxsurfP=surfP_val+surfP_var
 
+last_date_time=datetime(2020, 12, 31,18,0, 0)
 
 # Open ERA5 Reanalysis Data
 print('\n%%% Loading ERA5 Data Files %%%\n')
@@ -129,9 +130,10 @@ oxy_flag_total=np.zeros(len(floatlist))
 oxy_flag_total[:]=np.NaN
 
 print('Number of Floats: ',len(floatlist))
+
 for b in np.arange(len(floatlist)):
 # For debugging and looking at specific floats
-#for b in [16]:
+#for b in [35]:
     WMO=floatlist[b]
     dac=daclist[b]
     
@@ -165,18 +167,27 @@ for b in np.arange(len(floatlist)):
         mindate=date_reform[0]
         minhour=mindate.hour
         
-        if minhour%timestep != 0:
-            new_minhour=( minhour//timestep+1)*timestep
+        if (minhour%timestep == 0 and mindate.minute == 0 and mindate.second ==0):
+            minddate=mindate
+        else:
+            new_minhour=(minhour//timestep+1)*timestep
             if new_minhour == 24:
                 mindate_roundup=datetime(mindate.year, mindate.month, mindate.day+1,0,0, 0)
             else:
                 mindate_roundup=datetime(mindate.year, mindate.month, mindate.day,new_minhour,0, 0)
-        elif minhour%timestep == 0:
-            if (mindate.minute == 0 and mindate.second ==0):
-                mindate_roundup=mindate
-            else:
-                new_minhour=( minhour//timestep+1)*timestep
-                mindate_roundup=datetime(mindate.year, mindate.month, mindate.day,new_minhour,0, 0)
+            
+        # if minhour%timestep != 0:
+        #     new_minhour=(minhour//timestep+1)*timestep
+        #     if new_minhour == 24:
+        #         mindate_roundup=datetime(mindate.year, mindate.month, mindate.day+1,0,0, 0)
+        #     else:
+        #         mindate_roundup=datetime(mindate.year, mindate.month, mindate.day,new_minhour,0, 0)
+        # elif minhour%timestep == 0:
+        #     if (mindate.minute == 0 and mindate.second ==0):
+        #         mindate_roundup=mindate
+        #     else:
+        #         new_minhour=(minhour//timestep+1)*timestep
+        #         mindate_roundup=datetime(mindate.year, mindate.month, mindate.day,new_minhour,0, 0)
         q=1
         time_check=0
         
@@ -199,7 +210,10 @@ for b in np.arange(len(floatlist)):
             else:
                 new_maxhour=(maxhour//timestep)*timestep
                 maxdate_rounddown=datetime(maxdate.year, maxdate.month, maxdate.day,new_maxhour,0, 0)
-        
+                
+        ## Data only goes to 2020-12-31 18:000
+        if maxdate.year == 2021:
+            maxdate_rounddown=last_date_time
         date_6hr=np.arange(mindate_roundup, maxdate_rounddown,timestep*60*60,dtype='datetime64[s]')
         #date_6hr_pd=pd.date_range(mindate_roundup,maxdate_rounddown,freq=freq_str)
         
@@ -475,76 +489,79 @@ for b in np.arange(len(floatlist)):
         print('Finding Nearest Neighbor...')
         for i in np.arange(len(date_6hr)):
             
-            #Find the matching date-time pair
-            profdate=date_6hr[i]
-            date_ind=np.where(era5_time==profdate)
-            
-            # Should add a check to make sure there is only 1 date ind
-            
-            # use index to get lat-lon slices and other variable
-            # wind speed structure (time,lat, lon)
-            
-            # load u_10 data
-            u10_slice=era_u10_data.sel(time=profdate).u10.values[0,:,:]
-            
-            # load v_10 data
-            v10_slice=era_v10_data.sel(time=profdate).v10.values[0,:,:]
-            
-            # load slp
-            slp_slice=era_slp_data.sel(time=profdate).msl.values[0,:,:]
-            
-            # Find the closest lat, lon point
+            # Make sure float has a valid postion
             float_lat=surf_lat_interp[i]
             float_lon=surf_lon_interp[i]
             
-            # Use nearest neighbors to find nearest point
-            dd, ii = tree.query([float_lon,float_lat])
-            #print(ii)
-            
-            # Use ii get row column pairing 
-            # ravel unravels row by row 
-            
-            num_col=len(x)
-            lat_ind=ii//num_col
-            lon_ind=ii%num_col
-            
-            u10_point=u10_slice[lat_ind, lon_ind]
-            v10_point=v10_slice[lat_ind, lon_ind]
-            slp_point=slp_slice[lat_ind, lon_ind]
-            # convert SLP from Pa to atmosphere
-            slp_point=slp_point/101325
-            
-            ## Use nearest values and calculate air-sea flux at each point
-            c=surf_O_interp_units[i]
-            S=surf_S_interp[i]
-            U10=(u10_point**2 + v10_point**2)**.5
-            T=surf_T_interp[i]
-            SLP=slp_point
-            
-            ###########################################
-            ## L13 -- ISSUE with wrapper and ret ?? ##
-            #def L13(C,u10,SP,pt,*,slp=1.0,gas=None,rh=1.0,chi_atm=None):
+            if (np.isnan(float_lat) == False and np.isnan(float_lon) == False):
+                #Find the matching date-time pair
+                profdate=date_6hr[i]
+                date_ind=np.where(era5_time==profdate)
                 
-            # [Fd_L13, Fc_L13, Fp_L13, Deq_L13, k_L13]=AS.L13(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
-            # Fd_L13_float[i]=Fd_L13
-            # Fc_L13_float[i]=Fc_L13
-            # Fp_L13_float[i]=Fp_L13
-            
-            # Outputs 
-            # Fd = surface gas flux mmol/m^2-s
-            # Fc = flyx from fully collapsing large bubbles
-            # Fp = flux from partially collapsing large bubbles
-            # Deq = equilibirum saturation ( %sat/100)
-            # k = diffusive gas traner velocity 
-            # Ft = Fd + Fc + Fp
-            
-            ##############
-            ## N16 #######
-            #def N16(C,u10,SP,pt,*,slp=1.0,gas=None,rh=1.0,chi_atm=None):
-            [Fd_N16, Fc_N16, Fp_N16, Deq_N16, k__N16]=AS.N16(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
-            Fd_N16_float[i]=Fd_N16
-            Fc_N16_float[i]=Fc_N16
-            Fp_N16_float[i]=Fp_N16
+                # Should add a check to make sure there is only 1 date ind
+                
+                # use index to get lat-lon slices and other variable
+                # wind speed structure (time,lat, lon)
+                
+                # load u_10 data
+                u10_slice=era_u10_data.sel(time=profdate).u10.values[0,:,:]
+                
+                # load v_10 data
+                v10_slice=era_v10_data.sel(time=profdate).v10.values[0,:,:]
+                
+                # load slp
+                slp_slice=era_slp_data.sel(time=profdate).msl.values[0,:,:]
+                
+                # Find the closest lat, lon point
+    
+                # Use nearest neighbors to find nearest point
+                dd, ii = tree.query([float_lon,float_lat])
+                #print(ii)
+                
+                # Use ii get row column pairing 
+                # ravel unravels row by row 
+                
+                num_col=len(x)
+                lat_ind=ii//num_col
+                lon_ind=ii%num_col
+                
+                u10_point=u10_slice[lat_ind, lon_ind]
+                v10_point=v10_slice[lat_ind, lon_ind]
+                slp_point=slp_slice[lat_ind, lon_ind]
+                # convert SLP from Pa to atmosphere
+                slp_point=slp_point/101325
+                
+                ## Use nearest values and calculate air-sea flux at each point
+                c=surf_O_interp_units[i]
+                S=surf_S_interp[i]
+                U10=(u10_point**2 + v10_point**2)**.5
+                T=surf_T_interp[i]
+                SLP=slp_point
+                
+                ###########################################
+                ## L13 -- ISSUE with wrapper and ret ?? ##
+                #def L13(C,u10,SP,pt,*,slp=1.0,gas=None,rh=1.0,chi_atm=None):
+                    
+                # [Fd_L13, Fc_L13, Fp_L13, Deq_L13, k_L13]=AS.L13(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
+                # Fd_L13_float[i]=Fd_L13
+                # Fc_L13_float[i]=Fc_L13
+                # Fp_L13_float[i]=Fp_L13
+                
+                # Outputs 
+                # Fd = surface gas flux mmol/m^2-s
+                # Fc = flyx from fully collapsing large bubbles
+                # Fp = flux from partially collapsing large bubbles
+                # Deq = equilibirum saturation ( %sat/100)
+                # k = diffusive gas traner velocity 
+                # Ft = Fd + Fc + Fp
+                
+                ##############
+                ## N16 #######
+                #def N16(C,u10,SP,pt,*,slp=1.0,gas=None,rh=1.0,chi_atm=None):
+                [Fd_N16, Fc_N16, Fp_N16, Deq_N16, k__N16]=AS.N16(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
+                Fd_N16_float[i]=Fd_N16
+                Fc_N16_float[i]=Fc_N16
+                Fp_N16_float[i]=Fp_N16
         
         print('Calculating Total Air-Sea Flux...')
         #Ft_L13_float=Fd_L13_float+Fc_L13_float+Fp_L13_float

@@ -10,6 +10,8 @@ A new an improved version of BGCArgoPython with better and more organized code :
 ## Python Scripts
 - ***GetArgoFiles.py***: Uses synthetic profile index to get BGC Argo floats in a certain geographic region (0-80ºW, 40-80ºN)
   - Outputs DacWMO, WMO, Index text files, and floats sorted by dac (use for downloading floats from ftp site)
+  - Things to change:
+    - [ ] Add section that can sort by float sensor type (right now does all BGC Argo but should specify oxygen etc.)
 - ***SortFloatsByType.py***: Visually inspect float trajectories and categorize them by 'type'
   - Types: Boundary current, Labrador Sea, Irminger Sea, Other, or N/A
   - Output: Sorted_WMO_<TYPE>Float.txt and Sorted_DACWMO_<TYPE>Float.txt
