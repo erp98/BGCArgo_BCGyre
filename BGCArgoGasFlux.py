@@ -17,15 +17,18 @@ import gsw
 import gasex.airsea as AS
 from RandomFxns import DetermineAdjusted as DA
 import time
-import glob
+import cartopy as ct
+from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter)
 
+
+depth_time_interp = 1
 
 print('What types of floats do you want to analyze?')
 
 input_check = 0
 
 while input_check == 0:
-    floattype=input('1 (All), 2 (Boundary Current), 3 (Irminger), 4 (Labrador), 5(Other): ')
+    floattype=input('1 (All), 2 (Boundary Current), 3 (Labrador), 4 (Irminger), 5(Other): ')
     floattype=int(floattype)
     
     if floattype == 1:
@@ -35,10 +38,10 @@ while input_check == 0:
         print('\nAnalyzing BOUNDARY CURRENT floats\n')
         input_check=1
     elif floattype==3:
-        print('\nAnalyzing IRMINGER SEA floats\n')
+        print('\nAnalyzing LABRADOR SEA floats\n')
         input_check=1
     elif floattype==4:
-        print('\nAnalyzing LABRADOR SEA floats\n')
+        print('\nAnalyzing IRMINGER SEA floats\n')
         input_check=1
     elif floattype==5:
         print('\nAnalyzing OTHER floats\n')
@@ -46,6 +49,8 @@ while input_check == 0:
 
 tic_start=time.time()
 
+################################
+########## SOME VALUES #########
 # Random parameters you can change  
 refdate=datetime(1990,1,1)  # Not really important, only used for converting dates to numbers for interpolation
 timestep=6 # hours --> matches ERA5 data spacing
@@ -59,6 +64,15 @@ minsurfP=surfP_val-surfP_var
 maxsurfP=surfP_val+surfP_var
 
 last_date_time=datetime(2020, 12, 31,18,0, 0)
+
+lat_N=80.000
+lat_S= 40.00
+lon_E= 0.00
+lon_W= -80.00
+
+fsize_x=10
+fsize_y=6
+##############################
 
 # Open ERA5 Reanalysis Data
 print('\n%%% Loading ERA5 Data Files %%%\n')
@@ -95,13 +109,13 @@ elif floattype ==2:
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/BCFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_BCFloats.csv'
 elif floattype==3:
-    FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_IrmingerFloats.txt'
-    FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/IrmingerFloats/'
-    CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_IrmingerFloats.csv'
-elif floattype==4:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_LabradorSeaFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/LabradorFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_LabradorFloats.csv'
+elif floattype==4:
+    FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_IrmingerFloats.txt'
+    FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/IrmingerFloats/'
+    CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_IrmingerFloats.csv'
 elif floattype==5:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_OtherFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/OtherFloats/'
@@ -131,9 +145,9 @@ oxy_flag_total[:]=np.NaN
 
 print('Number of Floats: ',len(floatlist))
 
-for b in np.arange(len(floatlist)):
+#for b in np.arange(len(floatlist)):
 # For debugging and looking at specific floats
-#for b in [35]:
+for b in [0,1,2]:
     WMO=floatlist[b]
     dac=daclist[b]
     
@@ -221,14 +235,7 @@ for b in np.arange(len(floatlist)):
         date_6hr_reform=[[]]*len(date_6hr)
         for i in np.arange(len(date_6hr_reform)):
             date_6hr_reform[i]=datetime.fromisoformat(str(date_6hr[i]))
-          
-        ###### DEPTH INTERPOLATION ###########
-        # pres_range=np.arange(0,2001,10)
-        # temp_interp_p=np.zeros((pres.shape))
-        # temp_f=interpolate.interp1d(pres, temp)
-        # sal_f=interpolate.interp1d(pres, sal)
-        # doxy_f=interpolate.interp1d(pres,doxy)
-        ######################################
+
         
         ##############################
         #### Get surface values #######
@@ -258,7 +265,7 @@ for b in np.arange(len(floatlist)):
         surf_O[:]=np.NaN
         
         # For each profile...
-        print('Getting surface values...')
+        print('\nGetting surface values...\n')
         for i in np.arange(pres.shape[0]):
             ## Determine what values fall in the given pressure range and save index
             j=0
@@ -321,7 +328,7 @@ for b in np.arange(len(floatlist)):
                     surf_O[i]=np.NaN
                 else:
                     surf_O[i]=np.nanmean(O_sub)
-        
+            
         # Remove bad times
         
         if len(bad_index)>0:
@@ -350,7 +357,7 @@ for b in np.arange(len(floatlist)):
                 lon=np.array(lon)
                 
         ## Plot surface values vs time
-        figs, axs=plt.subplots(3,1)
+        figs, axs=plt.subplots(3,1, figsize=(fsize_x,fsize_y))
         ## Temp ##
         axs[0].plot(date_reform, surf_T)
         axs[0].set_title('Surface Temperature (ºC)')
@@ -365,17 +372,17 @@ for b in np.arange(len(floatlist)):
             ax.label_outer()
         for tick in axs[2].get_xticklabels():
             tick.set_rotation(45)
-            
+        plt.xlabel('Date')
         plt.subplots_adjust(hspace=0.5)
         figs.suptitle('Surface Values for Float '+str(WMO))
-        figs.subplots_adjust(bottom=0.2)
+        figs.subplots_adjust(bottom=0.18)
         plt.savefig(FigDir+str(WMO)+'_Surface_STO.jpg')
         plt.close()
         
         ####################################
         #### Interpolate data with time ###
         ###################################
-        print('Interpolating...')
+        print('\nInterpolating...\n')
         
         dates_num=np.zeros(len(date_reform))
         dates6hr_num=np.zeros(len(date_6hr))
@@ -400,39 +407,63 @@ for b in np.arange(len(floatlist)):
         
         
         # ## Plot interpolated surface values vs time
-        figs, axs=plt.subplots(3,1)
+        figs, axs=plt.subplots(3,1,figsize=(10,8))
         ## Temp ##
         axs[0].plot(date_reform, surf_T,':', date_6hr, surf_T_interp,'-')
         axs[0].set_title('Surface Temperature (ºC)')
-        axs[0].legend(['Data','Interpolated'])
+        #axs[0].legend(['Data','Interpolated'])
         ## Salinity ##
         axs[1].plot(date_reform, surf_S,':', date_6hr, surf_S_interp,'-')
         axs[1].set_title('Surface Salinity (PSU)')
-        axs[1].legend(['Data','Interpolated'])
+        #axs[1].legend(['Data','Interpolated'])
         ## DOXY ##
         axs[2].plot(date_reform, surf_O,':', date_6hr, surf_O_interp,'-')
         axs[2].set_title('Dissolved Oxygen (µmol/kg)')
-        axs[2].legend(['Data','Interpolated'])
+        #axs[2].legend(['Data','Interpolated'])
         
         for ax in axs.flat:
             ax.label_outer()
         for tick in axs[2].get_xticklabels():
             tick.set_rotation(45)
         
-        plt.subplots_adjust(hspace=0.5)
+        plt.subplots_adjust(hspace=0.3)
+        plt.xlabel('Date')
+        plt.legend(['Data','Interpolated'],loc="upper center", bbox_to_anchor=(0.5, 3.96), ncol=2)
         figs.suptitle('Surface Values Interpolated for Float '+str(WMO))
-        figs.subplots_adjust(bottom=0.2)
+        figs.subplots_adjust(bottom=0.12)
         plt.savefig(FigDir+str(WMO)+'_Surface_STO_Interpolated.jpg')
         plt.close()
         
         # Plot trajectory
-        plt.figure()
+        plt.figure(figsize=(fsize_x,fsize_y))
         plt.plot(lon, lat,':', surf_lon_interp, surf_lat_interp,'-')
         plt.xlabel('Longitude')
         plt.ylabel('Latitude')
         plt.legend(['Data','Interpolated'])
         plt.title('Trajectory Interpolated for Float '+str(WMO))
         plt.savefig(FigDir+str(WMO)+'_Trajectory_Interpolated.jpg')
+        plt.close()
+        
+        plt.figure(figsize=(fsize_x,fsize_y))
+        NA = plt.axes(projection=ct.crs.PlateCarree())
+        NA.set_extent([lon_E, lon_W, lat_S, lat_N])
+        lonval=-1*np.arange(-lon_E,-lon_W+1,10)
+        latval=np.arange(lat_S,lat_N+1,10)
+        NA.set_xticks(lonval, crs=ct.crs.PlateCarree())
+        NA.set_yticks(latval, crs=ct.crs.PlateCarree())
+        lon_formatter = LongitudeFormatter()
+        lat_formatter = LatitudeFormatter()
+        NA.add_feature(ct.feature.COASTLINE)
+        NA.add_feature(ct.feature.OCEAN)
+        NA.xaxis.set_major_formatter(lon_formatter)
+        NA.yaxis.set_major_formatter(lat_formatter)
+        plt.title('Trajectory for Float '+str(WMO))
+        plt.plot(lon[0],lat[0],'go')
+        plt.plot(lon[len(lon)-1],lat[len(lat)-1],'ro')
+        plt.xlabel('Longitude')
+        plt.ylabel('Latitude')
+        plt.plot(lon, lat)
+        plt.savefig(FigDir+str(WMO)+'_Trajectory_NAtlantic.jpg')
         plt.close()
     
         
@@ -486,7 +517,7 @@ for b in np.arange(len(floatlist)):
         Fp_N16_float[:]=np.NaN
         
         # For each point in time
-        print('Finding Nearest Neighbor...')
+        print('\nFinding Nearest Neighbor...\n')
         for i in np.arange(len(date_6hr)):
             
             # Make sure float has a valid postion
@@ -563,11 +594,11 @@ for b in np.arange(len(floatlist)):
                 Fc_N16_float[i]=Fc_N16
                 Fp_N16_float[i]=Fp_N16
         
-        print('Calculating Total Air-Sea Flux...')
+        print('\nCalculating Total Air-Sea Flux...\n')
         #Ft_L13_float=Fd_L13_float+Fc_L13_float+Fp_L13_float
         Ft_N16_float=Fd_N16_float+Fc_N16_float+Fp_N16_float
         
-        plt.figure()
+        plt.figure(figsize=(fsize_x,fsize_y))
         #plt.plot(date_6hr_reform, Ft_L13_float,date_6hr_reform, Fd_L13_float,date_6hr_reform, Fc_L13_float,date_6hr_reform, Fp_L13_float)
         plt.plot(date_6hr_reform, Ft_N16_float,date_6hr_reform, Fd_N16_float,date_6hr_reform, Fc_N16_float,date_6hr_reform, Fp_N16_float)
         plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
@@ -576,9 +607,184 @@ for b in np.arange(len(floatlist)):
         plt.ylabel('Flux (mmol/m^2-s)')
         plt.title('Air-Sea Oxygen Flux (N16) for Float '+str(WMO))
         plt.subplots_adjust(bottom=0.2)
-        plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16.jpg')
+        plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_RAW.jpg')
         plt.close() 
         
+        ##############################
+        ## Calculate moving average ##
+        ##############################
+        
+        print('Calculating Moving Averages...')
+        ## Surface Gas Flux ##
+        df_Fd_N16=pd.DataFrame({'Fd_N16': Fd_N16_float})
+        Fd_N16_MA_24hr=df_Fd_N16.rolling(int((24/6)),min_periods=1).mean()
+        Fd_N16_MA_1wk=df_Fd_N16.rolling(int((7*24)/6),min_periods=1).mean()
+        
+        ## Small bubble gas flux ##
+        df_Fc_N16=pd.DataFrame({'Fd_N16': Fc_N16_float})
+        Fc_N16_MA_24hr=df_Fc_N16.rolling(int((24/6)),min_periods=1).mean()
+        Fc_N16_MA_1wk=df_Fc_N16.rolling(int((7*24)/6),min_periods=1).mean()
+        
+        ## Large bubble gas flux ##
+        df_Fp_N16=pd.DataFrame({'Fd_N16': Fp_N16_float})
+        Fp_N16_MA_24hr=df_Fp_N16.rolling(int((24/6)),min_periods=1).mean()
+        Fp_N16_MA_1wk=df_Fp_N16.rolling(int((7*24)/6),min_periods=1).mean()
+        
+        ## Total Air-Sea Gas Flux ##
+        Ft_N16_MA_24hr=Fd_N16_MA_24hr+Fc_N16_MA_24hr+Fp_N16_MA_24hr
+        Ft_N16_MA_1wk=Fd_N16_MA_1wk+Fc_N16_MA_1wk+Fp_N16_MA_1wk
+        
+        # Break down by component
+        figs, axs=plt.subplots(4,1,figsize=(10,9))
+        ## Surface Flux ##
+        axs[0].plot(date_6hr_reform, Fd_N16_float, date_6hr_reform, Fd_N16_MA_24hr,date_6hr_reform,Fd_N16_MA_1wk)
+        axs[0].set_title('Surface Gas Flux (mmol/m^2-s)')
+        #axs[0].legend(['Raw','24-hr average','1-week average'])
+        ## Small Bubble ##
+        axs[1].plot(date_6hr_reform, Fc_N16_float, date_6hr_reform, Fc_N16_MA_24hr,date_6hr_reform,Fc_N16_MA_1wk)
+        axs[1].set_title('Small Bubble Gas Flux (mmol/m^2-s)')
+        #axs[1].legend(['Raw','24-hr average','1-week average'])
+        
+        ## Large Bubble ##
+        axs[2].plot(date_6hr_reform, Fp_N16_float, date_6hr_reform, Fp_N16_MA_24hr,date_6hr_reform,Fp_N16_MA_1wk)
+        axs[2].set_title('Large Bubble Gas Flux (mmol/m^2-s)')
+        #axs[2].legend(['Raw','24-hr average','1-week average'])
+        ## Total ##
+        axs[3].plot(date_6hr_reform, Ft_N16_float, date_6hr_reform, Ft_N16_MA_24hr,date_6hr_reform,Ft_N16_MA_1wk)
+        axs[3].set_title('Total Air-Sea Gas Flux (mmol/m^2-s)')
+        #axs[3].legend(['Raw','24-hr average','1-week average'])
+        
+        for ax in axs.flat:
+            ax.label_outer()
+        for tick in axs[3].get_xticklabels():
+            tick.set_rotation(45)
+        
+        plt.subplots_adjust(hspace=0.5)
+        plt.xlabel('Date')
+        #plt.legend(['Raw','24-hr average','1-week average'],bbox_to_anchor=(1.05,2.5), loc="lower left", borderaxespad=0)
+        plt.legend(['Raw','24-hr average','1-week average'],loc="upper center", bbox_to_anchor=(0.5, 6), ncol=3)
+        figs.suptitle('Air-Sea Oxygen Flux (N16) by Component for Float '+str(WMO))
+        figs.subplots_adjust(bottom=0.1)
+        plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Component_Average.jpg')
+        plt.close()
+        
+        ## 24 hr moving average ## 
+        plt.figure(figsize=(fsize_x,fsize_y))
+        plt.plot(date_6hr_reform, Ft_N16_MA_24hr,date_6hr_reform, Fd_N16_MA_24hr,date_6hr_reform, Fc_N16_MA_24hr,date_6hr_reform, Fp_N16_MA_24hr)
+        plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
+        plt.xlabel('Date')
+        plt.xticks(rotation=45)
+        plt.ylabel('Flux (mmol/m^2-s)')
+        plt.title('Air-Sea Oxygen Flux (N16) with 24-hr Average for Float '+str(WMO), y=1.05)
+        plt.subplots_adjust(bottom=0.2)
+        plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_24hr.jpg')
+        plt.close() 
+        
+        ## 1 week moving average ##
+        plt.figure(figsize=(fsize_x,fsize_y))
+        plt.plot(date_6hr_reform, Ft_N16_MA_1wk,date_6hr_reform, Fd_N16_MA_1wk,date_6hr_reform, Fc_N16_MA_1wk,date_6hr_reform, Fp_N16_MA_1wk)
+        plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
+        plt.xlabel('Date')
+        plt.xticks(rotation=45)
+        plt.ylabel('Flux (mmol/m^2-s)')
+        plt.title('Air-Sea Oxygen Flux (N16) with 1-week Average for Float '+str(WMO),y=1.05)
+        plt.subplots_adjust(bottom=0.2)
+        plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_1week.jpg')
+        plt.close()
+        
+        if depth_time_interp == 1:
+            ###### DEPTH INTERPOLATION ###########
+            pres_range=np.arange(5,2001,10)
+            temp_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+            temp_interp_p[:]=np.NaN
+            sal_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+            sal_interp_p[:]=np.NaN
+            doxy_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+            doxy_interp_p[:]=np.NaN
+            
+            # Depth and time interpolated variables
+            temp_pt=np.zeros((len(pres_range), len(date_6hr)))
+            temp_pt[:]=np.NaN
+            sal_pt=np.zeros((len(pres_range), len(date_6hr)))
+            sal_pt[:]=np.NaN
+            oxy_pt=np.zeros((len(pres_range), len(date_6hr)))
+            oxy_pt[:]=np.NaN
+    
+            ######################################
+            for i in np.arange(len(pres)):
+                
+                ## Depth interpolation ##
+                temp_f=interpolate.interp1d(pres[i], temp[i])
+                sal_f=interpolate.interp1d(pres[i], sal[i])
+                doxy_f=interpolate.interp1d(pres[i],doxy[i])
+                
+                # Not every float goes as deep/shallow as specified pressure range
+                # Go through and find shallowest and deepest profile measurements
+                # and use subsection of pres_range so interpolation works
+                # interpolate to desired pressure range
+                temp_interp_p[:,i]=temp_f(pres_range)
+                sal_interp_p[:,i]=sal_f(pres_range)
+                doxy_interp_p[:,i]=doxy_f(pres_range)
+            
+            # for each pressure level interpolate with time
+            for i in np.arange(pres_range.shape[0]):
+                level_temp=temp_interp_p[i,:]
+                level_sal=sal_interp_p[i,:]
+                level_oxy=doxy_interp_p[i,:]
+                
+                level_temp_interp=interpolate.interp1d(dates_num, level_temp)
+                level_sal_interp=interpolate.interp1d(dates_num, level_sal)
+                level_oxy_interp=interpolate.interp1d(dates_num, level_oxy)
+                
+                t_pt=level_temp_interp(dates6hr_num)
+                s_pt=level_sal_interp(dates6hr_num)
+                o_pt=level_oxy_interp(dates6hr_num)
+                
+                temp_pt[i,:]=t_pt
+                sal_pt[i,:]=s_pt
+                oxy_pt[i,:]=o_pt
+            
+            
+            X, Y = np.meshgrid(date_6hr_reform, pres_range)
+            
+            plt.figure(figsize=(fsize_x,fsize_y))
+            plt.contourf(X,Y,temp_pt)
+            plt.gca().invert_yaxis()
+            plt.colorbar()
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.ylabel('Pressure (dbar)')
+            plt.title('Temperature Time Series for Float '+str(WMO))
+            plt.subplots_adjust(bottom=0.2)
+            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Temp.jpg')
+            plt.close()
+            
+            plt.figure(figsize=(fsize_x,fsize_y))
+            plt.contourf(X,Y, sal_pt)
+            plt.gca().invert_yaxis()
+            plt.colorbar()
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.ylabel('Pressure (dbar)')
+            plt.title('Salinity Time Series for Float '+str(WMO))
+            plt.subplots_adjust(bottom=0.2)
+            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Sal.jpg')
+            plt.close()
+            
+            plt.figure(figsize=(fsize_x,fsize_y))
+            plt.contourf(X,Y,oxy_pt)
+            plt.gca().invert_yaxis()
+            plt.colorbar()
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.ylabel('Pressure (dbar)')
+            plt.title('Oxygen Time Series for Float '+str(WMO))
+            plt.subplots_adjust(bottom=0.2)
+            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Oxy.jpg')
+            plt.close()
+            
+            plt.show()
+            a=1
     else:
         print('This float does not measure oxygen')
         
