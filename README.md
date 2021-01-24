@@ -20,12 +20,20 @@ A new an improved version of BGCArgoPython with better and more organized code :
   - Input: Sorted_DACWMO_<TYPE>Float.txt files and ERA5 wind and SLP data
   - Output: Figures of surface variables (temperature, salinity, oxygen) float trajectory, and air-sea oxygen flux
   - Things To Do:
+    - [ ] Debug section interpolation code (pres x date x parameter)
+    - [X] Position check --> remove data not in the correct lat-lon range
+    - [X] Quality control check --> remove data that do not have certain QC flag
     - [X] Debug code to run through all floats
-    - [ ] Debug L13 code and re-run code with both (L13 and N16) parameterizations
-    - [ ] Make float trajectory map with continents and zoomed in
-    - [ ] Average time-series to make data smoother
+    - [X] Debug L13 code and re-run code with both (L13 and N16) parameterizations
+    - [X] Make float trajectory map with continents and zoomed in
+    - [X] Average time-series to make data smoother
 - ***RandomFxns.py***: A collection of random functions
   - DetermineAdjusted: determines if adjusted/not-adjust Argo float data is used; if adjusted data is present, these data are used
     - Output: adjusted_flag; if flag = 1 adjusted data were used
   - Other functions to add
+    - [X] PositionCheck
+    - [ ] QCCheck
     - [ ] Calculate MLD
+
+Questions
+- What are good rolling average periods? 24 hrs, 1 week?

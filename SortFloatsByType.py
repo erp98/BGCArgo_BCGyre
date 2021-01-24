@@ -115,7 +115,7 @@ for i in np.arange(len(fname_list)):
 
     while check == 0:
 
-        var_int=input('1 (Lab), 2 (Irm), 3 (BC), 4 (Other), 5(N/A):')
+        var_int=input('1 (Lab), 2 (BC), 3 (Both), 4 (Other), 5(N/A):')
         print(var_int)
 
         if var_int == '1':
@@ -126,15 +126,15 @@ for i in np.arange(len(fname_list)):
             AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
             check = 1
         elif var_int == '2':
-            Irm=Irm+[titlename]
-            Irm_DACWMO=Irm_DACWMO+[DAC_WMO]
+            BC=BC+[titlename]
+            BC_DACWMO=BC_DACWMO+[DAC_WMO]
             
             AllFloats=AllFloats+[titlename]
             AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
             check=1
         elif var_int == '3':
-            BC=BC+[titlename]
-            BC_DACWMO=BC_DACWMO+[DAC_WMO]
+            Irm=Irm+[titlename]
+            Irm_DACWMO=Irm_DACWMO+[DAC_WMO]
             
             AllFloats=AllFloats+[titlename]
             AllFloats_DACWMO=AllFloats_DACWMO+[DAC_WMO]
@@ -164,7 +164,7 @@ with open(Dir1+'Sorted_WMO_BCFloats.txt','w') as f:
     for ele in BC:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_WMO_IrmingerFloats.txt','w') as f:
+with open(Dir1+'Sorted_WMO_BothFloats.txt','w') as f:
     for ele in Irm:
         f.write(ele+'\n')
 
@@ -187,7 +187,7 @@ with open(Dir1+'Sorted_DACWMO_BCFloats.txt','w') as f:
     for ele in BC_DACWMO:
         f.write(ele+'\n')
 
-with open(Dir1+'Sorted_DACWMO_IrmingerFloats.txt','w') as f:
+with open(Dir1+'Sorted_DACWMO_BothFloats.txt','w') as f:
     for ele in Irm_DACWMO:
         f.write(ele+'\n')
 
