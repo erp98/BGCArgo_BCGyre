@@ -20,7 +20,9 @@ import time
 import cartopy as ct
 from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter)
 
-
+## Depth_time_interp: Produce sections (date-time-variable)
+# 0 = no sections
+# 1 = sections
 depth_time_interp = 0
 
 print('What types of floats do you want to analyze?')
@@ -28,7 +30,7 @@ print('What types of floats do you want to analyze?')
 input_check = 0
 
 while input_check == 0:
-    floattype=input('1 (All), 2 (Boundary Current), 3 (Labrador), 4 (Irminger), 5(Other): ')
+    floattype=input('1 (All), 2 (Boundary Current), 3 (Labrador), 4 (Both), 5(Other): ')
     floattype=int(floattype)
     
     if floattype == 1:
@@ -75,6 +77,11 @@ fsize_y=6
 
 #good_QC=[b'1',b'2',b'5',b'8']
 good_QC=[1,2,5,8]
+
+# interp values
+maxP_sec=2000
+step_P=5
+
 ##############################
 
 # Open ERA5 Reanalysis Data
@@ -107,22 +114,29 @@ if floattype == 1:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_AllFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/AllFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_AllFloats.csv'
+    CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_AllFloats_'
 elif floattype ==2:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_BCFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/BCFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_BCFloats.csv'
+    CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_BCFloats_'
 elif floattype==3:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_LabradorSeaFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/LabradorFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_LabradorFloats.csv'
+    CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_LabradorFloats_'
 elif floattype==4:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_Bothloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/BothFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_BothFloats.csv'
+    CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_BothFloats_'
 elif floattype==5:
     FloatDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/Sorted_DACWMO_OtherFloats.txt'
     FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/OtherFloats/'
     CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/AdjDataFlags_OtherFloats.csv'
+    CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_OtherFloats_'
+
+FigDir_Traj='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/Trajectories/'
 
 floatlist=[]
 daclist=[]
@@ -145,12 +159,14 @@ sal_flag_total=np.zeros(len(floatlist))
 sal_flag_total[:]=np.NaN
 oxy_flag_total=np.zeros(len(floatlist))
 oxy_flag_total[:]=np.NaN
+flux_count=np.zeros(len(floatlist))
+flux_count[:]=np.NaN
 
 print('Number of Floats: ',len(floatlist))
 
-#for b in np.arange(len(floatlist)):
+for b in np.arange(len(floatlist)):
 ### For debugging and looking at specific floats ###
-for b in [10]:
+#for b in [10]:
     WMO=floatlist[b]
     dac=daclist[b]
     
@@ -361,7 +377,7 @@ for b in [10]:
                 lon=np.array(lon)
         
         ## If all of the surface values are nans, do not make figures or do calculations
-        if (sum(np.isnan(surf_T))==len(surf_T) and sum(np.isnan(surf_S))==len(surf_S) and sum(np.isnan(surf_O))==len(surf_O)):
+        if (sum(np.isnan(surf_T))==len(surf_T) or sum(np.isnan(surf_S))==len(surf_S) or sum(np.isnan(surf_O))==len(surf_O)):
             plt.figure(figsize=(fsize_x,fsize_y))
             NA = plt.axes(projection=ct.crs.PlateCarree())
             NA.set_extent([lon_E, lon_W, lat_S, lat_N])
@@ -381,9 +397,10 @@ for b in [10]:
             plt.xlabel('Longitude')
             plt.ylabel('Latitude')
             plt.plot(lon, lat)
-            plt.savefig(FigDir+str(WMO)+'_Trajectory_NAtlantic.jpg')
+            plt.savefig(FigDir_Traj+str(WMO)+'_Trajectory_NAtlantic.jpg')
             plt.close()
             
+            flux_count[b]=0
             print('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
             print('%% Not Enough Data to Calculate Flux %%')
             print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
@@ -499,6 +516,7 @@ for b in [10]:
             plt.ylabel('Latitude')
             plt.plot(lon, lat)
             plt.savefig(FigDir+str(WMO)+'_Trajectory_NAtlantic.jpg')
+            plt.savefig(FigDir_Traj+str(WMO)+'_Trajectory_NAtlantic.jpg')
             plt.close()
         
             
@@ -820,10 +838,18 @@ for b in [10]:
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_1week.jpg')
             plt.close()
+            
+            flux_count[b]=1
+            
+            WMO_df=np.zeros(len(date_6hr_reform))
+            WMO_df[:]=WMO
+            TotalAirSea=pd.DataFrame({'WMO':WMO_df,'Date': date_6hr_reform,'Lat': surf_lat_interp, 'Lon': surf_lon_interp,'Fp_L13': Fp_L13_float,'Fc_L13': Fc_L13_float,'Fd_L13': Fd_L13_float, 'Ft_L13': Ft_L13_float,
+                                      'Fp_N16': Fp_N16_float,'Fc_N16': Fc_N16_float,'Fd_N16': Fd_N16_float, 'Ft_N16': Ft_N16_float})
+            TotalAirSea.to_csv(CSVDir_AS+str(WMO)+'.csv')
         
         if depth_time_interp == 1:
             ###### DEPTH INTERPOLATION ###########
-            pres_range=np.arange(5,2001,10)
+            pres_range=np.arange(step_P,maxP_sec+1,step_P)
             temp_interp_p=np.zeros((len(pres_range),pres.shape[0]))
             temp_interp_p[:]=np.NaN
             sal_interp_p=np.zeros((len(pres_range),pres.shape[0]))
@@ -851,9 +877,24 @@ for b in [10]:
                 # Go through and find shallowest and deepest profile measurements
                 # and use subsection of pres_range so interpolation works
                 # interpolate to desired pressure range
-                temp_interp_p[:,i]=temp_f(pres_range)
-                sal_interp_p[:,i]=sal_f(pres_range)
-                doxy_interp_p[:,i]=doxy_f(pres_range)
+                
+                ## get subset of press range
+                minP_sub=np.nanmin(pres[i])
+                maxP_sub=np.nanmax(pres[i])
+                
+                if minP_sub%step_P == 0:
+                    startind_P=int(minP_sub//step_P)+1
+                else:
+                    startind_P=int(minP_sub//step_P)
+                
+                if maxP_sub >= maxP_sec:
+                    endind_P=len(pres_range)+1
+                else:
+                    endind_P=int(maxP_sub//step_P)
+                
+                temp_interp_p[startind_P:endind_P,i]=temp_f(pres_range[startind_P:endind_P])
+                sal_interp_p[startind_P:endind_P,i]=sal_f(pres_range[startind_P:endind_P])
+                doxy_interp_p[startind_P:endind_P,i]=doxy_f(pres_range[startind_P:endind_P])
             
             # for each pressure level interpolate with time
             for i in np.arange(pres_range.shape[0]):
@@ -922,7 +963,7 @@ for b in [10]:
     print('Time elapsed (min): ', (toc_float-tic_float)/60)
 
 print('\n%% Saving adjusted variable flags %%\n')
-adj_df=pd.DataFrame({'FloatWMO': floatlist, 'Pres_Adj': pres_flag_total,'Temp_Adj': temp_flag_total,'Sal_Adj': sal_flag_total, 'Oxy_Adj':oxy_flag_total})
+adj_df=pd.DataFrame({'FloatWMO': floatlist, 'Pres_Adj': pres_flag_total,'Temp_Adj': temp_flag_total,'Sal_Adj': sal_flag_total, 'Oxy_Adj':oxy_flag_total,'Flux_Calc': flux_count})
 adj_df=adj_df.sort_values(by=['FloatWMO'])
 adj_df.to_csv(CSVDir)
 

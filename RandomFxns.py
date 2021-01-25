@@ -96,10 +96,10 @@ def PositionCheck(RegionOI, LatData, LonData, TempData, SalData, OxyData):
     #var_nans=[]
     # Make a pandas dataframe of all the data
     all_df=pd.DataFrame({'Lat': LatData, 'Lon': LonData, 'Temp': TempData, 'Sal': SalData,'Oxy': OxyData})
-    all_df.loc[all_df.loc[:,'Lat']>=LatNMax,:]=np.NaN
-    all_df.loc[all_df.loc[:,'Lat']<=LatSMin,:]=np.NaN
-    all_df.loc[all_df.loc[:,'Lon']>=LonEMax,:]=np.NaN
-    all_df.loc[all_df.loc[:,'Lon']<=LonWMin,:]=np.NaN
+    all_df.loc[all_df.loc[:,'Lat']>LatNMax,:]=np.NaN
+    all_df.loc[all_df.loc[:,'Lat']<LatSMin,:]=np.NaN
+    all_df.loc[all_df.loc[:,'Lon']>LonEMax,:]=np.NaN
+    all_df.loc[all_df.loc[:,'Lon']<LonWMin,:]=np.NaN
     
     # Turn data back to arrays
     LatData_C = all_df.loc[:,'Lat'].to_numpy()
@@ -111,6 +111,7 @@ def PositionCheck(RegionOI, LatData, LonData, TempData, SalData, OxyData):
     return LatData_C, LonData_C, TempData_C, SalData_C, OxyData_C
 
 def ArgoQC(Data, Data_QC, goodQC_flags):
+    
     AllQCLevels=[b'1',b'2',b'3',b'4',b'5',b'6',b'7',b'8',b'9']
     AllQCLevels_i=[1,2,3,4,5,6,7,8,9]
     QCData=np.zeros((Data.shape))
@@ -132,5 +133,18 @@ def ArgoQC(Data, Data_QC, goodQC_flags):
             QCData[i,:]=t_df
     
     return QCData
+
+def FindInd(ThingToSearch, ThingLookingFor):
+    
+    found = 0
+    i = 0
+    ind=np.NaN
+    
+    while (found == 0 and i<len(ThingToSearch)):
         
+        if str(ThingToSearch[i]) == ThingLookingFor:
+            found = 1
+            ind=i
         
+        i=i+1
+    return ind
