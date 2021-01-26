@@ -41,12 +41,14 @@ for data_i in data_types:
         print('\n%% Loading BC Float Data %%\n')
         CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_BCFloats_'
         FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/BC_'
+        title_add='LS-BC Floats'
     elif data_i == 1:
         # Load Lab Gyre float data
         print('\n%% Loading Lab Sea Gyre Float Data %%\n')
         CSVDir_AS='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2Flux/AirSeaO2Flux_LabradorFloats_'
         FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/LabSea_'
-    
+        title_add='LS-G Floats'
+        
     FileList=glob.glob(CSVDir_AS+'*.csv')
     df_count = 0
     
@@ -114,94 +116,149 @@ for data_i in data_types:
     StdData=AllData.groupby(by='Date').std()
     
     date_list=MeanData.index.values.tolist()
+    FirstDate=date_list[0]
+    LastDate=date_list[-1]
+    
+    # Get full range of dates in between first and last profile date
+    AllDates_df=pd.date_range(str(FirstDate),str(LastDate),freq='6H')
+    AllDates=[[]]*len(AllDates_df)
+    for i in np.arange(len(AllDates)):
+        AllDates[i]=str(AllDates_df[i])
+    AllDates=np.array(AllDates)
+    
+    ## N16 ##
+    Ft_N16=np.zeros(len(AllDates_df))
+    Ft_N16[:]=np.NaN
+    Fd_N16=np.zeros(len(AllDates_df))
+    Fd_N16[:]=np.NaN
+    Fp_N16=np.zeros(len(AllDates_df))
+    Fp_N16[:]=np.NaN
+    Fc_N16=np.zeros(len(AllDates_df))
+    Fc_N16[:]=np.NaN
+    
+    ## L13 ##
+    Ft_L13=np.zeros(len(AllDates_df))
+    Ft_L13[:]=np.NaN
+    Fd_L13=np.zeros(len(AllDates_df))
+    Fd_L13[:]=np.NaN
+    Fp_L13=np.zeros(len(AllDates_df))
+    Fp_L13[:]=np.NaN
+    Fc_L13=np.zeros(len(AllDates_df))
+    Fc_L13[:]=np.NaN  
+    
+    # Go through dates and match data to correct time period
+    for j in np.arange(len(date_list)):
+        date_ind=np.where(AllDates == date_list[j])
+        
+        # Mean Data column values
+        # 1: WMO, 2: Lat, 3: Lon, 
+        # 4: Fp_l13, 5:Fc_L13, 6: Fd_L13, 7 Ft_L13
+        # 8: Fp_N16, 9: Fc_N16, 10: Fd_N16, 11 Ft_N16
+        Ft_N16[date_ind]=MeanData.iloc[j,11]
+        Fd_N16[date_ind]=MeanData.iloc[j,10]
+        Fp_N16[date_ind]=MeanData.iloc[j,8]
+        Fc_N16[date_ind]=MeanData.iloc[j,9]
+    
+        Ft_L13[date_ind]=MeanData.iloc[j,7]
+        Fd_L13[date_ind]=MeanData.iloc[j,6]
+        Fp_L13[date_ind]=MeanData.iloc[j,4]
+        Fc_L13[date_ind]=MeanData.iloc[j,5]
+    
     num_ticks=20
-    xticks_ind=np.arange(0,(len(date_list)//num_ticks*num_ticks)+1, step=len(date_list)//num_ticks)
+    xticks_ind=np.arange(0,(len(AllDates)//num_ticks*num_ticks)+1, step=len(AllDates)//num_ticks)
     xticks_labels=[]
     for i in xticks_ind:
-        xticks_labels=xticks_labels+[date_list[i]]
+        xticks_labels=xticks_labels+[AllDates[i]]
     
     print('\n%% Plotting Gas Flux Time Series %%\n')
     
     ## Raw Data ##
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list, MeanData.loc[:,'Ft_N16'])
-    #plt.fill_between(date_list, MeanData.loc[:,'Ft_N16']+StdData.loc[:,'Ft_N16'],MeanData.loc[:,'Ft_N16']-StdData.loc[:,'Ft_N16'])
+    plt.plot(AllDates, Ft_N16)
+    #plt.scatter(AllDates, Ft_N16, s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (N16) - Raw')
+    plt.title('Total Air-Sea Flux (N16) - '+title_add+' - Raw)
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'N16_Raw.jpg')
     plt.close()
     
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list, MeanData.loc[:,'Ft_L13'])
-    #plt.fill_between(date_list, MeanData.loc[:,'Ft_L13']+StdData.loc[:,'Ft_L13'],MeanData.loc[:,'Ft_L13']-StdData.loc[:,'Ft_L13'])
+    plt.plot(AllDates, Ft_L13)
+    #plt.scatter(AllDates, Ft_L13, s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (L13) - Raw')
+    plt.title('Total Air-Sea Flux (L13) - '+title_add+' - Raw')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'L13_Raw.jpg')
     plt.close()
     
     ## Moving Average: 24 hrs ##
-    Ft_N16_24hr=MeanData.loc[:,'Fd_N16'].rolling(int((24/6)),min_periods=1).mean()+MeanData.loc[:,'Fp_N16'].rolling(int((24/6)),min_periods=1).mean()+MeanData.loc[:,'Fc_N16'].rolling(int((24/6)),min_periods=1).mean()
-    Ft_L13_24hr=MeanData.loc[:,'Fd_L13'].rolling(int((24/6)),min_periods=1).mean()+MeanData.loc[:,'Fp_L13'].rolling(int((24/6)),min_periods=1).mean()+MeanData.loc[:,'Fc_L13'].rolling(int((24/6)),min_periods=1).mean()
+    Ft_N16_24hr=pd.Series(Fd_N16).rolling(int((24/6)),min_periods=1).mean()+pd.Series(Fp_N16).rolling(int((24/6)),min_periods=1).mean()+pd.Series(Fc_N16).rolling(int((24/6)),min_periods=1).mean()
+    Ft_L13_24hr=pd.Series(Fd_L13).rolling(int((24/6)),min_periods=1).mean()+pd.Series(Fp_L13).rolling(int((24/6)),min_periods=1).mean()+pd.Series(Fc_L13).rolling(int((24/6)),min_periods=1).mean()
     
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list, Ft_N16_24hr)
+    plt.plot(AllDates, Ft_N16_24hr)
+    #plt.scatter(AllDates, Ft_N16_24hr,s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (N16) - 24 hr Moving Average')
+    plt.title('Total Air-Sea Flux (N16) - '+title_add+' - 24 hr Moving Average')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'N16_24hr.jpg')
     plt.close()
     
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list,Ft_L13_24hr)
+    plt.plot(AllDates,Ft_L13_24hr)
+    #plt.scatter(AllDates,Ft_L13_24hr,s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (L13) - 24 hr Moving Average')
+    plt.title('Total Air-Sea Flux (L13) - '+title_add+' - 24 hr Moving Average')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'L13_24hr.jpg')
     plt.close()
     
     ## Moving Average: 1 week ##
-    Ft_N16_1wk=MeanData.loc[:,'Fd_N16'].rolling(int((7*24)/6),min_periods=1).mean()+MeanData.loc[:,'Fp_N16'].rolling(int((7*24)/6),min_periods=1).mean()+MeanData.loc[:,'Fc_N16'].rolling(int((7*24)/6),min_periods=1).mean()
-    Ft_L13_1wk=MeanData.loc[:,'Fd_L13'].rolling(int((7*24)/6),min_periods=1).mean()+MeanData.loc[:,'Fp_L13'].rolling(int((7*24)/6),min_periods=1).mean()+MeanData.loc[:,'Fc_L13'].rolling(int((7*24)/6),min_periods=1).mean()
+    Ft_N16_1wk=pd.Series(Fd_N16).rolling(int((7*24)/6),min_periods=1).mean()+pd.Series(Fp_N16).rolling(int((7*24)/6),min_periods=1).mean()+pd.Series(Fc_N16).rolling(int((7*24)/6),min_periods=1).mean()
+    Ft_L13_1wk=pd.Series(Fd_L13).rolling(int((7*24)/6),min_periods=1).mean()+pd.Series(Fp_L13).rolling(int((7*24)/6),min_periods=1).mean()+pd.Series(Fc_L13).rolling(int((7*24)/6),min_periods=1).mean()
     
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list, Ft_N16_1wk)
+    plt.plot(AllDates, Ft_N16_1wk)
+    #plt.scatter(AllDates, Ft_N16_1wk,s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (N16) - 1 week Moving Average')
+    plt.title('Total Air-Sea Flux (N16) - '+title_add+' - 1 week Moving Average')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'N16_1wk.jpg')
     plt.close()
     
     
     plt.figure(figsize=(fsize_x,fsize_y))
-    plt.plot(date_list, Ft_L13_1wk)
+    plt.plot(AllDates, Ft_L13_1wk)
+    #plt.scatter(AllDates, Ft_L13_1wk,s=1)
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (L13) - 1 week Moving Average')
+    plt.title('Total Air-Sea Flux (L13) - '+title_add+' - 1 week Moving Average')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'L13_1wk.jpg')
     plt.close()
     
+    flux_types=['Fp_L13', 'Fc_L13', 'Fd_L13','Ft_L13','Fp_N16','Fc_N16','Fd_N16','Ft_N16']
     if data_i == 0:
-        dates_BC=date_list
-        data_BC=MeanData.loc[:,'Ft_N16']
+        dates_BC=np.array(date_list)
+        data_BC=MeanData.loc[:,flux_types]
     elif data_i ==1:
-        dates_LSG=date_list
-        data_LSG=MeanData.loc[:,'Ft_N16']
+        dates_LSG=np.array(date_list)
+        data_LSG=MeanData.loc[:,flux_types]
 
 # Make complete date range for data
+print('\n%% Comparing Gas Flux Time Series %%\n')
+
 min_flag = np.NaN
 # min_flag = 0; min date is LSG
 # min_flag = 1; min date is BC
@@ -218,42 +275,87 @@ if dates_LSG[-1]>dates_BC[-1]:
 else:
     MaxDate=dates_BC[-1]
     
-dates_total=pd.date_range(MinDate,MaxDate,freq='6H')
+dates_total_df=pd.date_range(str(MinDate),str(MaxDate),freq='6H')
+dates_total=[[]]*len(dates_total_df)
+for i in np.arange(len(dates_total_df)):
+    dates_total[i]=str(dates_total_df[i])
+dates_total=np.array(dates_total)
+
+######### BC #########
+## N16 ##
 BC_N16=np.zeros(len(dates_total))
 BC_N16[:]=np.NaN
+
+BC_N16_24hr=np.zeros(len(dates_total))
+BC_N16_24hr[:]=np.NaN
+
+BC_N16_1wk=np.zeros(len(dates_total))
+BC_N16_1wk[:]=np.NaN
+
+## L13 ##
+BC_L13=np.zeros(len(dates_total))
+BC_L13[:]=np.NaN
+
+BC_L13_24hr=np.zeros(len(dates_total))
+BC_L13_24hr[:]=np.NaN
+
+BC_L13_1wk=np.zeros(len(dates_total))
+BC_L13_1wk[:]=np.NaN
+
+######### LSG #########
+## N16 ##
 LSG_N16=np.zeros(len(dates_total))
 LSG_N16[:]=np.NaN
 
-if min_flag == 0:
-    LSG_N16[0:len(data_LSG)]=data_LSG
-    startind=FindInd(ThingToSearch=dates_total, ThingLookingFor=dates_BC[0])
-    endind=startind+len(dates_BC)
-    BC_N16[startind:endind]=data_BC
-    # Check that ends match
-    if (str(dates_total[len(data_LSG)-1])==dates_LSG[-1] and str(dates_total[endind])==dates_BC[-1]):
-        print('Everything Matches')
-    else:
-        print('ERROR!')
+LSG_N16_24hr=np.zeros(len(dates_total))
+LSG_N16_24hr[:]=np.NaN
+
+LSG_N16_1wk=np.zeros(len(dates_total))
+LSG_N16_1wk[:]=np.NaN
+
+## L13 ##
+LSG_L13=np.zeros(len(dates_total))
+LSG_L13[:]=np.NaN
+
+LSG_L13_24hr=np.zeros(len(dates_total))
+LSG_L13_24hr[:]=np.NaN
+
+LSG_L13_1wk=np.zeros(len(dates_total))
+LSG_L13_1wk[:]=np.NaN
+
+# BC floats
+for i in np.arange(len(dates_BC)):
+    date_ind=np.where(dates_total == dates_BC[i])
+    # if dates_total[date_ind] != dates_BC[i]:
+    #     print(date_ind)
+    BC_N16[date_ind]=data_BC[i]
+
+# LSG floats
+for i in np.arange(len(dates_LSG)):
+    date_ind=np.where(dates_total == dates_LSG[i])
+    # if dates_total[date_ind] != dates_LSG[i]:
+    #     print(date_ind)
+    LSG_N16[date_ind]=data_LSG[i]
+
+# Make figure labels
+num_ticks=20
+xticks_ind2=np.arange(0,(len(dates_total)//num_ticks*num_ticks)+1, step=len(dates_total)//num_ticks)
+xticks_labels2=[]
+for i in xticks_ind2:
+    xticks_labels2=xticks_labels2+[dates_total[i]]
     
-elif min_flag ==1:
-    BC_N16[0:len(data_BC)]=data_BC
-    startind=FindInd(ThingToSearch=dates_total, ThingLookingFor=dates_LSG[0])
-    endind=startind+len(dates_LSG)
-    LSG_N16[startind:endind]=data_LSG
-     
-    # Check that ends match
-    if (dates_total[len(data_BC)-1]==dates_BC[-1] and dates_total[endind]==dates_LSG[-1]):
-        print('Everything Matches')
-    else:
-        print('ERROR!')
-        
-# plt.figure(figsize=(fsize_x,fsize_y))
-# plt.scatter(dates_LSG,data_LSG, s= 1)
-# plt.scatter(dates_BC,data_BC, s=1)
-# plt.legend(['LS-BC','LS-G'])
-# plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
-# plt.subplots_adjust(bottom=0.3)
-# plt.savefig('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux.jpg')
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_N16)
+plt.plot(dates_total,LSG_N16)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gass Flux (N16) - Raw')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_N16_Raw.jpg')
 
 
 
