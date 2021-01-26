@@ -111,6 +111,7 @@ for data_i in data_types:
         
         wmo_count=wmo_count+1
     
+    print('There are '+str(len(float_wmo))+' floats')
     # Calculate the mean at given time in specific region 
     MeanData=AllData.groupby(by='Date').mean()
     StdData=AllData.groupby(by='Date').std()
@@ -179,7 +180,7 @@ for data_i in data_types:
     plt.xticks(ticks=xticks_ind,labels=xticks_labels, rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Flux (mol/m^2-s)')
-    plt.title('Total Air-Sea Flux (N16) - '+title_add+' - Raw)
+    plt.title('Total Air-Sea Flux (N16) - '+title_add+' - Raw')
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(FigDir+'N16_Raw.jpg')
     plt.close()

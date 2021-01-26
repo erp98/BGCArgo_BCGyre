@@ -134,17 +134,4 @@ def ArgoQC(Data, Data_QC, goodQC_flags):
     
     return QCData
 
-def FindInd(ThingToSearch, ThingLookingFor):
-    
-    found = 0
-    i = 0
-    ind=np.NaN
-    
-    while (found == 0 and i<len(ThingToSearch)):
-        
-        if str(ThingToSearch[i]) == ThingLookingFor:
-            found = 1
-            ind=i
-        
-        i=i+1
-    return ind
+

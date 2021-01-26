@@ -39,7 +39,13 @@ A new an improved version of BGCArgoPython with better and more organized code :
     - If there are no measurements of T, S, or O, gas flux is not calculated
 - ***GasFluxTimeSeries.py***:
   - Things To Do:
+    - [ ] Add other fluxes (L13 and moving averages)
     - [ ] Error propagation: Calculate the standard deviation for each point w/ rolling mean
+- ***MakeBoundaryCurrent.py***: Try and classify profiles as boundary current or gyre floats
+  - Notes:
+    - There is not statistically significant difference in float speed between the gyre and the boudary current :( However, I can define a boundary current and gyre shape with some overlap
+  - Things To Do:
+    - [ ] Work on gyre shape --> convert convex hull to shapely polygon
 - ***RandomFxns.py***: A collection of random functions
   - DetermineAdjusted: determines if adjusted/not-adjust Argo float data is used; if adjusted data is present, these data are used
     - Output: adjusted_flag; if flag = 1 adjusted data were used
