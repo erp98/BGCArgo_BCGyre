@@ -7,6 +7,7 @@ Created on Thu Jan 14 11:10:59 2021
 """
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 def DetermineAdjusted(raw_data, raw_data_QC,a_data, a_data_QC):
     # raw_data = not adjusted BGC Argo data
@@ -133,5 +134,11 @@ def ArgoQC(Data, Data_QC, goodQC_flags):
             QCData[i,:]=t_df
     
     return QCData
+
+def ArgoDataLoader(WMO, DAC):
+    BGCfile='/Users/Ellen/Desktop/ArgoGDAC/dac/'+DAC+'/'+str(WMO)+'/'+str(WMO)+'_Sprof.nc'
+    Data = xr.open_dataset(BGCfile)
+    
+    return Data
 
 

@@ -4,7 +4,7 @@ A new an improved version of BGCArgoPython with better and more organized code :
 
 ## Things To Do
 - [X] Sort Argo floats by geographic regions
-- [ ] Calculate air-sea oxygen flux
+- [X] Calculate air-sea oxygen flux
 - [ ] Make air-sea flux time series for different float types
 - [ ] Sort floats by profile more closely to specific geographic regions
 - [ ] Interpolate data to same pressure levels
@@ -39,13 +39,17 @@ A new an improved version of BGCArgoPython with better and more organized code :
     - If there are no measurements of T, S, or O, gas flux is not calculated
 - ***GasFluxTimeSeries.py***:
   - Things To Do:
-    - [ ] Add other fluxes (L13 and moving averages)
+    - [X] Make monthly averages!
+    - [X] Add other fluxes (L13 and moving averages)
     - [ ] Error propagation: Calculate the standard deviation for each point w/ rolling mean
 - ***MakeBoundaryCurrent.py***: Try and classify profiles as boundary current or gyre floats
   - Notes:
     - There is not statistically significant difference in float speed between the gyre and the boudary current :( However, I can define a boundary current and gyre shape with some overlap
   - Things To Do:
-    - [ ] Work on gyre shape --> convert convex hull to shapely polygon
+    - [X] Work on gyre shape --> convert convex hull to shapely polygon
+    - [ ] Evaluate shape performance using other float trajectories
+    - [ ] "Optimize" the fit by adjusting boundary current thickness and gyre radius
+    - [ ] Try machine learning clustering techniques? Or something similar? Could be improved fit but also need to do more research
 - ***RandomFxns.py***: A collection of random functions
   - DetermineAdjusted: determines if adjusted/not-adjust Argo float data is used; if adjusted data is present, these data are used
     - Output: adjusted_flag; if flag = 1 adjusted data were used
@@ -54,5 +58,11 @@ A new an improved version of BGCArgoPython with better and more organized code :
     - [X] QCheck
     - [ ] Calculate MLD
 
-Questions
-- What are good rolling average periods? 24 hrs, 1 week?
+## Questions & Other Notes & More
+- Things To Do Before 2/4:
+  - [X] For GasFluxTimeSeries:
+    - [X] Add other fluxes (L13 and moving averages)
+    - [X] Do monthly averages for the different time series
+  - [ ] For MakeBoundaryCurrent:
+    - [ ] Figure out why optimization is so effing slow
+    - [ ] Maybe try ML or just run with one for now

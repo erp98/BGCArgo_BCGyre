@@ -140,6 +140,7 @@ FigDir_Traj='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/Trajectories/'
 
 floatlist=[]
 daclist=[]
+dacwmo=[]
 count= 0
 # Read in float info
 with open(FloatDir) as fp:
@@ -150,6 +151,7 @@ with open(FloatDir) as fp:
         r=t.split('/')
         floatlist=floatlist+[int(r[1])]
         daclist=daclist+[r[0]]
+        dacwmo=dacwmo+[t]
  
 pres_flag_total=np.zeros(len(floatlist))
 pres_flag_total[:]=np.NaN
@@ -177,8 +179,8 @@ for b in np.arange(len(floatlist)):
     tic_float=time.time()
     print('\n%%% '+str(WMO)+' %%%\n')
     print(b, ' Floats completed; ', len(floatlist)-b,' Floats Left')
-    BGCfile='/Users/Ellen/Desktop/ArgoGDAC/dac/'+dac+'/'+str(WMO)+'/'+str(WMO)+'_Sprof.nc'
-    f = xr.open_dataset(BGCfile)
+    #BGCfile='/Users/Ellen/Desktop/ArgoGDAC/dac/'+dac+'/'+str(WMO)+'/'+str(WMO)+'_Sprof.nc'
+    f = RF.ArgoDataLoader(DAC=dac, WMO=WMO)
     
     float_vars=list(f.keys())
     float_vars=np.array(float_vars)
@@ -963,7 +965,7 @@ for b in np.arange(len(floatlist)):
     print('Time elapsed (min): ', (toc_float-tic_float)/60)
 
 print('\n%% Saving adjusted variable flags %%\n')
-adj_df=pd.DataFrame({'FloatWMO': floatlist, 'Pres_Adj': pres_flag_total,'Temp_Adj': temp_flag_total,'Sal_Adj': sal_flag_total, 'Oxy_Adj':oxy_flag_total,'Flux_Calc': flux_count})
+adj_df=pd.DataFrame({'FileName': dacwmo, 'FloatWMO': floatlist, 'Pres_Adj': pres_flag_total,'Temp_Adj': temp_flag_total,'Sal_Adj': sal_flag_total, 'Oxy_Adj':oxy_flag_total,'Flux_Calc': flux_count})
 adj_df=adj_df.sort_values(by=['FloatWMO'])
 adj_df.to_csv(CSVDir)
 

@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cartopy as ct
 from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter)
-from RandomFxns import FindInd
 
 #####################
 ## Some Parameters ##
@@ -34,6 +33,8 @@ fsize_x=10
 fsize_y=6
 
 ###################
+
+FigDir_Compare='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_'
 data_types=[0,1]
 for data_i in data_types:
     if data_i == 0:
@@ -111,7 +112,7 @@ for data_i in data_types:
         
         wmo_count=wmo_count+1
     
-    print('There are '+str(len(float_wmo))+' floats')
+    print('\nThere are '+str(len(float_wmo))+' floats\n')
     # Calculate the mean at given time in specific region 
     MeanData=AllData.groupby(by='Date').mean()
     StdData=AllData.groupby(by='Date').std()
@@ -249,13 +250,13 @@ for data_i in data_types:
     plt.savefig(FigDir+'L13_1wk.jpg')
     plt.close()
     
-    flux_types=['Fp_L13', 'Fc_L13', 'Fd_L13','Ft_L13','Fp_N16','Fc_N16','Fd_N16','Ft_N16']
+    temp_Data_store=pd.DataFrame({'Ft_L13': Ft_L13,'Ft_L13_24hr': Ft_L13_24hr,'Ft_L13_1wk': Ft_L13_1wk,'Ft_N16': Ft_N16,'Ft_N16_24hr': Ft_N16_24hr,'Ft_N16_1wk': Ft_N16_1wk})
     if data_i == 0:
-        dates_BC=np.array(date_list)
-        data_BC=MeanData.loc[:,flux_types]
+        dates_BC=AllDates
+        data_BC=temp_Data_store
     elif data_i ==1:
-        dates_LSG=np.array(date_list)
-        data_LSG=MeanData.loc[:,flux_types]
+        dates_LSG=AllDates
+        data_LSG=temp_Data_store
 
 # Make complete date range for data
 print('\n%% Comparing Gas Flux Time Series %%\n')
@@ -329,14 +330,26 @@ for i in np.arange(len(dates_BC)):
     date_ind=np.where(dates_total == dates_BC[i])
     # if dates_total[date_ind] != dates_BC[i]:
     #     print(date_ind)
-    BC_N16[date_ind]=data_BC[i]
+    BC_L13[date_ind]=data_BC.iloc[i,0]
+    BC_L13_24hr[date_ind]=data_BC.iloc[i,1]
+    BC_L13_1wk[date_ind]=data_BC.iloc[i,2]
+    
+    BC_N16[date_ind]=data_BC.iloc[i,3]
+    BC_N16_24hr[date_ind]=data_BC.iloc[i,4]
+    BC_N16_1wk[date_ind]=data_BC.iloc[i,5]
 
 # LSG floats
 for i in np.arange(len(dates_LSG)):
     date_ind=np.where(dates_total == dates_LSG[i])
     # if dates_total[date_ind] != dates_LSG[i]:
     #     print(date_ind)
-    LSG_N16[date_ind]=data_LSG[i]
+    LSG_L13[date_ind]=data_LSG.iloc[i,0]
+    LSG_L13_24hr[date_ind]=data_LSG.iloc[i,1]
+    LSG_L13_1wk[date_ind]=data_LSG.iloc[i,2]
+    
+    LSG_N16[date_ind]=data_LSG.iloc[i,3]
+    LSG_N16_24hr[date_ind]=data_LSG.iloc[i,4]
+    LSG_N16_1wk[date_ind]=data_LSG.iloc[i,5]
 
 # Make figure labels
 num_ticks=20
@@ -344,7 +357,52 @@ xticks_ind2=np.arange(0,(len(dates_total)//num_ticks*num_ticks)+1, step=len(date
 xticks_labels2=[]
 for i in xticks_ind2:
     xticks_labels2=xticks_labels2+[dates_total[i]]
-    
+
+############ L13 ###############
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_L13)
+plt.plot(dates_total,LSG_L13)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gas Flux (L13) - Raw')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig(FigDir_Compare+'L13_Raw.jpg')
+plt.close()
+
+
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_L13_24hr)
+plt.plot(dates_total,LSG_L13_24hr)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gas Flux (L13) - 24hr')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig(FigDir_Compare+'L13_24hr.jpg')
+plt.close()
+
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_L13_1wk)
+plt.plot(dates_total,LSG_L13_1wk)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gas Flux (L13) - 1wk')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig(FigDir_Compare+'L13_1wk.jpg')
+plt.close()
+
+############ N16 ###############
 plt.figure(figsize=(fsize_x,fsize_y))
 plt.plot(dates_total,BC_N16)
 plt.plot(dates_total,LSG_N16)
@@ -354,11 +412,202 @@ plt.legend(['LS-BC','LS-G'])
 plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
 plt.xlabel('Date')
 plt.ylabel('Flux (mol/m^2-s)')
-plt.title('Total Air Sea Gass Flux (N16) - Raw')
+plt.title('Total Air Sea Gas Flux (N16) - Raw')
 plt.subplots_adjust(bottom=0.3)
-plt.savefig('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_N16_Raw.jpg')
+plt.savefig(FigDir_Compare+'N16_Raw.jpg')
+plt.close()
 
 
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_N16_24hr)
+plt.plot(dates_total,LSG_N16_24hr)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gas Flux (N16) - 24hr')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig(FigDir_Compare+'N16_24hr.jpg')
+plt.close()
 
+plt.figure(figsize=(fsize_x,fsize_y))
+plt.plot(dates_total,BC_N16_1wk)
+plt.plot(dates_total,LSG_N16_1wk)
+# plt.scatter(dates_total,BC_N16, s=1)
+# plt.scatter(dates_total,LSG_N16, s= 1)
+plt.legend(['LS-BC','LS-G'])
+plt.xticks(ticks=xticks_ind2,labels=xticks_labels2, rotation=90)
+plt.xlabel('Date')
+plt.ylabel('Flux (mol/m^2-s)')
+plt.title('Total Air Sea Gas Flux (N16) - 1wk')
+plt.subplots_adjust(bottom=0.3)
+plt.savefig(FigDir_Compare+'N16_1wk.jpg')
+plt.close()
+
+
+print('\n%% Comparing Gas Flux Time Series (Monthly) %%\n')
+
+# Add a month column to data_BC and data_LSG
+BC_Months=np.zeros(len(dates_BC))
+BC_Months[:]=np.NaN
+
+LSG_Months=np.zeros(len(dates_LSG))
+LSG_Months[:]=np.NaN
+
+for i in np.arange(len(BC_Months)):
+    BC_Months[i]=int(dates_BC[i][5:7])
+
+for i in np.arange(len(LSG_Months)):
+    LSG_Months[i]=int(dates_LSG[i][5:7])
+
+data_BC['Month']=BC_Months
+data_LSG['Month']=LSG_Months
+
+BC_Data_M=data_BC.groupby(by='Month').mean()
+LSG_Data_M=data_LSG.groupby(by='Month').mean()
+
+BC_Data_M_std=data_BC.groupby(by='Month').std()
+LSG_Data_M_std=data_LSG.groupby(by='Month').std()
+
+MonthList=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec']
+
+x=np.arange(len(MonthList))
+width = 0.35  # the width of the bars
+
+############## L13 ##################
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13'], width, label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - Raw')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_Raw.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - Raw')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_Raw_wErr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_24hr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_24hr_wErr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_1wk.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_L13_1wk_wErr.jpg')
+plt.close()
+
+############## N16 ##################
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16'], width, label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - Raw')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_Raw.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - Raw')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_Raw_wErr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_24hr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_24hr_wErr.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_1wk.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='BC')
+rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='LSG')
+ax.set_ylabel('Flux (mol/m^2-s)')
+ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+plt.savefig(FigDir_Compare+'Month_N16_1wk_wErr.jpg')
+plt.close()
 
 
