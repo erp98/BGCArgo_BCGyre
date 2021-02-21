@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Thu Feb  4 11:16:57 2021
+
+@author: Ellen
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Jan 26 13:07:41 2021
 
 @author: Ellen
@@ -34,6 +42,10 @@ lab_N=65
 lab_S=48
 lab_E=-45
 lab_W=-80
+
+FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/MakeBC/'
+fsize_x=10
+fsize_y=6
 ##############################
 
 # Load boundary current data
@@ -195,7 +207,6 @@ AllCheckList=AllCheckList.set_index(pd.Index(list(new_ind)))
 
 ftype=AllCheckList.loc[:,'FloatType'].to_numpy()
 bc_count=0
-gyre_count=len(ftype)-bc_count
 j=0
 found=0
 
@@ -207,6 +218,7 @@ while (found ==0 and j<len(ftype)):
         found =1
     
     j=j+1
+gyre_count=len(ftype)-bc_count
 
 lat_bc=AllCheckList.iloc[:bc_count,3]
 lon_bc=AllCheckList.iloc[:bc_count,4]
@@ -324,263 +336,220 @@ GoodPath4 = LineString(GoodPoints[break3_ind+1:])
 
 
 ## Iterate through buffer sizes
-step_size=0.1
-minVal=1.2
-maxVal=2+step_size
-buffer1=np.arange(minVal,maxVal,step_size)
-buffer2=np.arange(minVal,maxVal,step_size)
-buffer3=np.arange(minVal,maxVal,step_size)
-buffer4=np.arange(minVal,maxVal,step_size)
 
-total_itter=len(buffer1)**4
-BC_1=np.zeros(total_itter)
-BC_2=np.zeros(total_itter)
-BC_3=np.zeros(total_itter)
-BC_4=np.zeros(total_itter)
+buff1=1
+buff2=2.3
+buff3=1
+buff4=1.6
 
-BC_BC=np.zeros(total_itter)
-BC_LSG=np.zeros(total_itter)
-# LSG_BC=np.zeros(total_itter)
-# LSG_LSG=np.zeros(total_itter)
+BoundaryCurrent1=GoodPath1.buffer(buff1)
+BoundaryCurrent2=GoodPath2.buffer(buff2)
+BoundaryCurrent3=GoodPath3.buffer(buff3)
+BoundaryCurrent4=GoodPath4.buffer(buff4)
 
-print('Starting Iterations')
-print(total_itter,' Total iterations')
-itter_counts=0
-tic1=time.time()
-tic2=time.time()
-for buff1 in buffer1:
-    for buff2 in buffer2:
-        for buff3 in buffer3:
-            for buff4 in buffer4:
-                
-                BoundaryCurrent1=GoodPath1.buffer(buff1)
-                BoundaryCurrent2=GoodPath2.buffer(buff2)
-                BoundaryCurrent3=GoodPath3.buffer(buff3)
-                BoundaryCurrent4=GoodPath4.buffer(buff4)
-                
-                # x1,y1 = BoundaryCurrent1.exterior.xy
-                # x2,y2 = BoundaryCurrent2.exterior.xy
-                # x3,y3 = BoundaryCurrent3.exterior.xy
-                # x4,y4 = BoundaryCurrent4.exterior.xy
-                
-                bc_included_bc=0
-                gyre_included_bc=0
-                # Determine what percentage of points fall in boundary current
-                for i in np.arange(len(All_Lat_BC)):
-                    p=Point(All_Lon_BC[i], All_Lat_BC[i])
-                    
-                    # Check BC
-                    if p.within(BoundaryCurrent1) == True:
-                        bc_included_bc=bc_included_bc+1
-                    elif p.within(BoundaryCurrent2) == True:
-                        bc_included_bc=bc_included_bc+1
-                    elif p.within(BoundaryCurrent3) == True:
-                        bc_included_bc=bc_included_bc+1
-                    elif p.within(BoundaryCurrent4) == True:
-                        bc_included_bc=bc_included_bc+1
-                    
-                    # # Check gyre
-                    # if p.within(Gyre) == True:
-                    #     gyre_included_bc=gyre_included_bc+1
-                        
-                ## Determine what percentage of gyre flots are in the BC
-                bc_included_lsg=0
-                gyre_included_lsg=0
-                # Determine what percentage of points fall in boundary current
-                for i in np.arange(len(All_Lat_LSG)):
-                    p=Point(All_Lon_LSG[i], All_Lat_LSG[i])
-                    if p.within(BoundaryCurrent1) == True:
-                        bc_included_lsg=bc_included_lsg+1
-                    elif p.within(BoundaryCurrent2) == True:
-                        bc_included_lsg=bc_included_lsg+1
-                    elif p.within(BoundaryCurrent3) == True:
-                        bc_included_lsg=bc_included_lsg+1
-                    elif p.within(BoundaryCurrent4) == True:
-                        bc_included_lsg=bc_included_lsg+1
-                        
-                    #     # Check gyre
-                    # if p.within(Gyre) == True:
-                    #     gyre_included_lsg=gyre_included_lsg+1
-                
-                # print('\nAnalysis using fit-data...')
-                # print('\n%%%%%%%%%%%%%%%%%')
-                # print('Boundary Current Shape Analysis \n')
-                # print(bc_included_bc,' BC profiles of ',len(All_Lat_BC),' are in the BC')
-                # print(np.round((bc_included_bc/len(All_Lat_BC))*100,2),' % of points')
-                # print(bc_included_lsg,' LSG profiles of ',len(All_Lat_LSG),' are in the BC')
-                # print(np.round((bc_included_lsg/len(All_Lat_LSG))*100,2),' % of points')
-                
-                # print('\nGyre Shape Analysis \n')
-                # print(gyre_included_bc,' BC profiles of ',len(All_Lat_BC),' are in the LSG')
-                # print(np.round((gyre_included_bc/len(All_Lat_BC))*100,2),' % of points')
-                # print(gyre_included_lsg,' LSG profiles of ',len(All_Lat_LSG),' are in the LSG')
-                # print(np.round((gyre_included_lsg/len(All_Lat_LSG))*100,2),' % of points')
-                # print('%%%%%%%%%%%%%%%%%\n') 
-                
-                # fig, axs = plt.subplots(2,2)
-                # axs[0,0].plot(x1,y1,c='r')
-                # axs[0,0].plot(x2,y2,c='r')
-                # axs[0,0].plot(x3,y3,c='r')
-                # axs[0,0].plot(x4,y4,c='r')
-                # axs[0,0].scatter(All_Lon_BC,All_Lat_BC,s=1, c='b')
-                
-                # axs[0,1].plot(x1,y1,c='r')
-                # axs[0,1].plot(x2,y2,c='r')
-                # axs[0,1].plot(x3,y3,c='r')
-                # axs[0,1].plot(x4,y4,c='r')
-                # axs[0,1].scatter(All_Lon_LSG,All_Lat_LSG,s=1, c='g')
-                
-                # axs[1,0].plot(px,py,c='k')
-                # axs[1,0].scatter(All_Lon_BC,All_Lat_BC,s=1, c='b')
-                
-                # axs[1,1].plot(px,py,c='k')
-                # axs[1,1].scatter(All_Lon_LSG,All_Lat_LSG,s=1, c='g')
-                
-                # plt.figure()
-                # NA = plt.axes(projection=ct.crs.PlateCarree())
-                # NA.set_extent([lon_E, lon_W, lat_S, lat_N])
-                # lonval=-1*np.arange(-lon_E,-lon_W+1,10)
-                # latval=np.arange(lat_S,lat_N+1,10)
-                # NA.set_xticks(lonval, crs=ct.crs.PlateCarree())
-                # NA.set_yticks(latval, crs=ct.crs.PlateCarree())
-                # lon_formatter = LongitudeFormatter()
-                # lat_formatter = LatitudeFormatter()
-                # NA.add_feature(ct.feature.COASTLINE)
-                # #NA.add_feature(ct.feature.OCEAN)
-                # NA.xaxis.set_major_formatter(lon_formatter)
-                # NA.yaxis.set_major_formatter(lat_formatter)
-                # plt.plot(x1,y1,c='r')
-                # plt.plot(x2,y2,c='r')
-                # plt.plot(x3,y3,c='r')
-                # plt.plot(x4,y4,c='r')
-                # plt.scatter(All_Lon_BC,All_Lat_BC,s=1)
-                
-                
-                # Go through each point and check polygon
-                bc_count_bc=0
-                bc_count_lsg=0
-                
-                # gyre_count_bc=0
-                # gyre_count_lsg=0
-                for i in np.arange(AllCheckList.shape[0]):
-                    
-                    p=Point(AllCheckList.iloc[i,4], AllCheckList.iloc[i,3])
-                    
-                    if AllCheckList.iloc[i,0] == 'BC':
-                    
-                        # Check if in boundary current
-                        if p.within(BoundaryCurrent1) == True:
-                            bc_count_bc=bc_count_bc+1
-                        elif p.within(BoundaryCurrent2) == True:
-                            bc_count_bc=bc_count_bc+1
-                        elif p.within(BoundaryCurrent3) == True:
-                            bc_count_bc=bc_count_bc+1
-                        elif p.within(BoundaryCurrent4) == True:
-                            bc_count_bc=bc_count_bc+1
-                            
-                        # # Check if in gyre
-                        # if p.within(Gyre) == True:
-                        #     gyre_count_bc=gyre_count_bc+1
-                    else:
-                        # Check if in boundary current
-                        if p.within(BoundaryCurrent1) == True:
-                            bc_count_lsg=bc_count_lsg+1
-                        elif p.within(BoundaryCurrent2) == True:
-                            bc_count_lsg=bc_count_lsg+1
-                        elif p.within(BoundaryCurrent3) == True:
-                            bc_count_lsg=bc_count_lsg+1
-                        elif p.within(BoundaryCurrent4) == True:
-                            bc_count_lsg=bc_count_lsg+1
-                            
-                        # # Check if in gyre
-                        # if p.within(Gyre) == True:
-                        #     gyre_count_lsg=gyre_count_lsg+1
+x1,y1 = BoundaryCurrent1.exterior.xy
+x2,y2 = BoundaryCurrent2.exterior.xy
+x3,y3 = BoundaryCurrent3.exterior.xy
+x4,y4 = BoundaryCurrent4.exterior.xy
+
+bc_included_bc=0
+gyre_included_bc=0
+# Determine what percentage of points fall in boundary current
+for i in np.arange(len(All_Lat_BC)):
+    p=Point(All_Lon_BC[i], All_Lat_BC[i])
+    
+    # Check BC
+    if p.within(BoundaryCurrent1) == True:
+        bc_included_bc=bc_included_bc+1
+    elif p.within(BoundaryCurrent2) == True:
+        bc_included_bc=bc_included_bc+1
+    elif p.within(BoundaryCurrent3) == True:
+        bc_included_bc=bc_included_bc+1
+    elif p.within(BoundaryCurrent4) == True:
+        bc_included_bc=bc_included_bc+1
+    
+    # Check gyre
+    if p.within(Gyre) == True:
+        gyre_included_bc=gyre_included_bc+1
+        
+## Determine what percentage of gyre flots are in the BC
+bc_included_lsg=0
+gyre_included_lsg=0
+# Determine what percentage of points fall in boundary current
+for i in np.arange(len(All_Lat_LSG)):
+    p=Point(All_Lon_LSG[i], All_Lat_LSG[i])
+    if p.within(BoundaryCurrent1) == True:
+        bc_included_lsg=bc_included_lsg+1
+    elif p.within(BoundaryCurrent2) == True:
+        bc_included_lsg=bc_included_lsg+1
+    elif p.within(BoundaryCurrent3) == True:
+        bc_included_lsg=bc_included_lsg+1
+    elif p.within(BoundaryCurrent4) == True:
+        bc_included_lsg=bc_included_lsg+1
+        
+        # Check gyre
+    if p.within(Gyre) == True:
+        gyre_included_lsg=gyre_included_lsg+1
+
+print('\nAnalysis using fit-data...')
+print('\n%%%%%%%%%%%%%%%%%')
+print('Boundary Current Shape Analysis \n')
+print(bc_included_bc,' BC profiles of ',len(All_Lat_BC),' are in the BC')
+print(np.round((bc_included_bc/len(All_Lat_BC))*100,2),' % of points')
+print(bc_included_lsg,' LSG profiles of ',len(All_Lat_LSG),' are in the BC')
+print(np.round((bc_included_lsg/len(All_Lat_LSG))*100,2),' % of points')
+
+print('\nGyre Shape Analysis \n')
+print(gyre_included_bc,' BC profiles of ',len(All_Lat_BC),' are in the LSG')
+print(np.round((gyre_included_bc/len(All_Lat_BC))*100,2),' % of points')
+print(gyre_included_lsg,' LSG profiles of ',len(All_Lat_LSG),' are in the LSG')
+print(np.round((gyre_included_lsg/len(All_Lat_LSG))*100,2),' % of points')
+print('%%%%%%%%%%%%%%%%%\n') 
+
+fig, axs = plt.subplots(2,2,figsize=(fsize_x,fsize_y))
+axs[0,0].plot(x1,y1,c='r')
+axs[0,0].plot(x2,y2,c='r')
+axs[0,0].plot(x3,y3,c='r')
+axs[0,0].plot(x4,y4,c='r')
+axs[0,0].scatter(All_Lon_BC,All_Lat_BC,s=1, c='b')
+
+axs[0,1].plot(x1,y1,c='r')
+axs[0,1].plot(x2,y2,c='r')
+axs[0,1].plot(x3,y3,c='r')
+axs[0,1].plot(x4,y4,c='r')
+axs[0,1].scatter(All_Lon_LSG,All_Lat_LSG,s=1, c='g')
+
+axs[1,0].plot(px,py,c='k')
+axs[1,0].scatter(All_Lon_BC,All_Lat_BC,s=1, c='b')
+
+axs[1,1].plot(px,py,c='k')
+axs[1,1].scatter(All_Lon_LSG,All_Lat_LSG,s=1, c='g')
+
+plt.savefig(FigDir+'TrainDataShapes.jpg')
+plt.close()
+
+plt.figure(figsize=(fsize_x,fsize_y))
+NA = plt.axes(projection=ct.crs.PlateCarree())
+NA.set_extent([lon_E, lon_W, lat_S, lat_N])
+lonval=-1*np.arange(-lon_E,-lon_W+1,10)
+latval=np.arange(lat_S,lat_N+1,10)
+NA.set_xticks(lonval, crs=ct.crs.PlateCarree())
+NA.set_yticks(latval, crs=ct.crs.PlateCarree())
+lon_formatter = LongitudeFormatter()
+lat_formatter = LatitudeFormatter()
+NA.add_feature(ct.feature.COASTLINE)
+#NA.add_feature(ct.feature.OCEAN)
+NA.xaxis.set_major_formatter(lon_formatter)
+NA.yaxis.set_major_formatter(lat_formatter)
+# plt.plot(x1,y1,c='r')
+# plt.plot(x2,y2,c='r')
+# plt.plot(x3,y3,c='r')
+# plt.plot(x4,y4,c='r')
+plt.scatter(All_Lon_BC,All_Lat_BC,s=1,label='BC')
+plt.scatter(All_Lon_LSG,All_Lat_LSG,s=1,label='LSG')
+plt.legend()
+plt.savefig(FigDir+'TrainDataPoints.jpg')
+plt.close()
+
+# Go through each point and check polygon
+bc_count_bc=0
+bc_count_lsg=0
+
+gyre_count_bc=0
+gyre_count_lsg=0
+for i in np.arange(AllCheckList.shape[0]):
+    
+    p=Point(AllCheckList.iloc[i,4], AllCheckList.iloc[i,3])
+    
+    if AllCheckList.iloc[i,0] == 'BC':
+    
+        # Check if in boundary current
+        if p.within(BoundaryCurrent1) == True:
+            bc_count_bc=bc_count_bc+1
+        elif p.within(BoundaryCurrent2) == True:
+            bc_count_bc=bc_count_bc+1
+        elif p.within(BoundaryCurrent3) == True:
+            bc_count_bc=bc_count_bc+1
+        elif p.within(BoundaryCurrent4) == True:
+            bc_count_bc=bc_count_bc+1
             
-                
-                # print('\nAnalysis using other float data...')
-                # print('\n%%%%%%%%%%%%%%%%%')
-                # print('Boundary Current Shape Analysis \n')
-                # print(bc_count_bc,' BC profiles of ',bc_count,' are in the BC')
-                # print(np.round((bc_count_bc/bc_count)*100,2),' % of points')
-                # print(bc_count_lsg,' LSG profiles of ',gyre_count,' are in the BC')
-                # print(np.round((bc_count_lsg/gyre_count)*100,2),' % of points')
-                
-                # print('\nGyre Shape Analysis \n')
-                # print(gyre_count_bc,' BC profiles of ',bc_count,' are in the LSG')
-                # print(np.round((gyre_count_bc/bc_count)*100,2),' % of points')
-                # print(gyre_count_lsg,' LSG profiles of ',gyre_count,' are in the LSG')
-                # print(np.round((gyre_count_lsg/gyre_count)*100,2),' % of points')
-                # print('%%%%%%%%%%%%%%%%%\n') 
-                
-                # fig, axs = plt.subplots(2,2)
-                # axs[0,0].plot(x1,y1,c='r')
-                # axs[0,0].plot(x2,y2,c='r')
-                # axs[0,0].plot(x3,y3,c='r')
-                # axs[0,0].plot(x4,y4,c='r')
-                # axs[0,0].scatter(lon_bc,lat_bc,s=1, c='b')
-                
-                # axs[0,1].plot(x1,y1,c='r')
-                # axs[0,1].plot(x2,y2,c='r')
-                # axs[0,1].plot(x3,y3,c='r')
-                # axs[0,1].plot(x4,y4,c='r')
-                # axs[0,1].scatter(lon_lsg,lat_lsg,s=1, c='g')
-                
-                # axs[1,0].plot(px,py,c='k')
-                # axs[1,0].scatter(lon_bc,lat_bc,s=1, c='b')
-                
-                # axs[1,1].plot(px,py,c='k')
-                # axs[1,1].scatter(lon_lsg,lat_lsg,s=1, c='g')
-                
-                per_bc_bc_tot=np.round((bc_count_bc+bc_included_bc)/(bc_count+len(All_Lat_BC))*100,2)
-                per_bc_lsg_tot=np.round(((bc_count_lsg+bc_included_lsg)/(gyre_count+len(All_Lat_LSG)))*100,2)
-                # per_lsg_bc_tot=np.round((gyre_count_bc+gyre_included_bc)/(bc_count+len(All_Lat_BC))*100,2)
-                # per_lsg_lsg_tot=np.round((gyre_count_lsg+gyre_included_lsg)/(gyre_count+len(All_Lat_LSG))*100,2)
-                
-                # print('\nAnalysis using all float data...')
-                # print('\n%%%%%%%%%%%%%%%%%')
-                # print('Boundary Current Shape Analysis \n')
+        # # Check if in gyre
+        # if p.within(Gyre) == True:
+        #     gyre_count_bc=gyre_count_bc+1
+    else:
+        # Check if in boundary current
+        if p.within(BoundaryCurrent1) == True:
+            bc_count_lsg=bc_count_lsg+1
+        elif p.within(BoundaryCurrent2) == True:
+            bc_count_lsg=bc_count_lsg+1
+        elif p.within(BoundaryCurrent3) == True:
+            bc_count_lsg=bc_count_lsg+1
+        elif p.within(BoundaryCurrent4) == True:
+            bc_count_lsg=bc_count_lsg+1
+            
+        # Check if in gyre
+        if p.within(Gyre) == True:
+            gyre_count_lsg=gyre_count_lsg+1
 
-                # print(bc_count_bc+bc_included_bc,' BC profiles of ',bc_count+len(All_Lat_BC),' are in the BC')
-                # print(per_bc_bc_tot,' % of points')
-                # print(bc_count_lsg+bc_included_lsg,' LSG profiles of ',gyre_count+len(All_Lat_LSG),' are in the BC')
-                # print(per_bc_lsg_tot,' % of points')
-                
-                # print('\nGyre Shape Analysis \n')
-                # print(gyre_count_bc+gyre_included_bc,' BC profiles of ',bc_count+len(All_Lat_BC),' are in the LSG')
-                # print(per_lsg_bc_tot,' % of points')
-                # print(gyre_count_lsg+gyre_included_lsg,' LSG profiles of ',gyre_count+len(All_Lat_LSG),' are in the LSG')
-                # print(per_lsg_lsg_tot,' % of points')
-                # print('%%%%%%%%%%%%%%%%%\n')
-                
-                
-                BC_1[itter_counts]=buff1
-                BC_2[itter_counts]=buff2
-                BC_3[itter_counts]=buff3
-                BC_4[itter_counts]=buff4
-                
-                BC_BC[itter_counts]=per_bc_bc_tot
-                BC_LSG[itter_counts]=per_bc_lsg_tot
-                # LSG_BC[itter_counts]=per_lsg_bc_tot
-                # LSG_LSG[itter_counts]=per_lsg_lsg_tot
-                
-                itter_counts=itter_counts+1
-                
-                if itter_counts%100==0:
-                    print(itter_counts,' iterations completed')
-                    print((total_itter-itter_counts),' iterations left')
-                    print(np.round((itter_counts/total_itter)*100,2),'% Complete')
-                    toc2=time.time()
-                    print((toc2-tic1)/60,' TOTAL minutes have elapsed')
-                    print((toc2-tic2)/60,' minutes have elapsed since last check') 
-                    
-                    tic2=time.time()
-                    
-ShapeChecks=pd.DataFrame({'BC_1':BC_1,'BC_2':BC_2,'BC_3':BC_3,'BC_4':BC_4
-                          ,'BC_BC':BC_BC,'BC_LSG':BC_LSG})
-                          #'LSG_BC':LSG_BC,'LSG_LSG':LSG_LSG})
-ShapeChecks.to_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BCBufferSizes.csv')
-toc1=time.time()
-print((toc1-tic1)/60,' TOTAL minutes have elapsed')
+
+print('\nAnalysis using other float data...')
+print('\n%%%%%%%%%%%%%%%%%')
+print('Boundary Current Shape Analysis \n')
+print(bc_count_bc,' BC profiles of ',bc_count,' are in the BC')
+print(np.round((bc_count_bc/bc_count)*100,2),' % of points')
+print(bc_count_lsg,' LSG profiles of ',gyre_count,' are in the BC')
+print(np.round((bc_count_lsg/gyre_count)*100,2),' % of points')
+
+print('\nGyre Shape Analysis \n')
+print(gyre_count_bc,' BC profiles of ',bc_count,' are in the LSG')
+print(np.round((gyre_count_bc/bc_count)*100,2),' % of points')
+print(gyre_count_lsg,' LSG profiles of ',gyre_count,' are in the LSG')
+print(np.round((gyre_count_lsg/gyre_count)*100,2),' % of points')
+print('%%%%%%%%%%%%%%%%%\n') 
+
+fig, axs = plt.subplots(2,2,figsize=(fsize_x,fsize_y))
+axs[0,0].plot(x1,y1,c='r')
+axs[0,0].plot(x2,y2,c='r')
+axs[0,0].plot(x3,y3,c='r')
+axs[0,0].plot(x4,y4,c='r')
+axs[0,0].scatter(lon_bc,lat_bc,s=1, c='b')
+
+axs[0,1].plot(x1,y1,c='r')
+axs[0,1].plot(x2,y2,c='r')
+axs[0,1].plot(x3,y3,c='r')
+axs[0,1].plot(x4,y4,c='r')
+axs[0,1].scatter(lon_lsg,lat_lsg,s=1, c='g')
+
+axs[1,0].plot(px,py,c='k')
+axs[1,0].scatter(lon_bc,lat_bc,s=1, c='b')
+
+axs[1,1].plot(px,py,c='k')
+axs[1,1].scatter(lon_lsg,lat_lsg,s=1, c='g')
+
+plt.savefig(FigDir+'TestDataShapes.jpg')
+plt.close()
+
+per_bc_bc_tot=np.round((bc_count_bc+bc_included_bc)/(bc_count+len(All_Lat_BC))*100,2)
+per_bc_lsg_tot=np.round(((bc_count_lsg+bc_included_lsg)/(gyre_count+len(All_Lat_LSG)))*100,2)
+per_lsg_bc_tot=np.round((gyre_count_bc+gyre_included_bc)/(bc_count+len(All_Lat_BC))*100,2)
+per_lsg_lsg_tot=np.round((gyre_count_lsg+gyre_included_lsg)/(gyre_count+len(All_Lat_LSG))*100,2)
+
+print('\nAnalysis using all float data...')
+print('\n%%%%%%%%%%%%%%%%%')
+print('Boundary Current Shape Analysis \n')
+
+print(bc_count_bc+bc_included_bc,' BC profiles of ',bc_count+len(All_Lat_BC),' are in the BC')
+print(per_bc_bc_tot,' % of points')
+print(bc_count_lsg+bc_included_lsg,' LSG profiles of ',gyre_count+len(All_Lat_LSG),' are in the BC')
+print(per_bc_lsg_tot,' % of points')
+
+print('\nGyre Shape Analysis \n')
+print(gyre_count_bc+gyre_included_bc,' BC profiles of ',bc_count+len(All_Lat_BC),' are in the LSG')
+print(per_lsg_bc_tot,' % of points')
+print(gyre_count_lsg+gyre_included_lsg,' LSG profiles of ',gyre_count+len(All_Lat_LSG),' are in the LSG')
+print(per_lsg_lsg_tot,' % of points')
+print('%%%%%%%%%%%%%%%%%\n')
+
 
 # #############################
 # ## Calculate float speeds ##

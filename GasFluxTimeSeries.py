@@ -34,7 +34,6 @@ fsize_y=6
 
 ###################
 
-FigDir_Compare='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_'
 data_types=[0,1]
 for data_i in data_types:
     if data_i == 0:
@@ -358,6 +357,7 @@ xticks_labels2=[]
 for i in xticks_ind2:
     xticks_labels2=xticks_labels2+[dates_total[i]]
 
+FigDir_Compare='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_'
 ############ L13 ###############
 plt.figure(figsize=(fsize_x,fsize_y))
 plt.plot(dates_total,BC_L13)

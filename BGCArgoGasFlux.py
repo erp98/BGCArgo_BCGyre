@@ -244,6 +244,7 @@ for b in np.arange(len(floatlist)):
         ## Data only goes to 2020-12-31 18:000
         if maxdate.year == 2021:
             maxdate_rounddown=last_date_time
+            
         date_6hr=np.arange(mindate_roundup, maxdate_rounddown,timestep*60*60,dtype='datetime64[s]')
         #date_6hr_pd=pd.date_range(mindate_roundup,maxdate_rounddown,freq=freq_str)
         
@@ -544,6 +545,11 @@ for b in np.arange(len(floatlist)):
             surf_density = np.zeros(len(surf_T_interp))
             surf_density[:]=np.NaN
             
+            oxy_sat = np.zeros(len(surf_T_interp))
+            oxy_sat[:]=np.NaN
+            oxy_dev = np.zeros(len(surf_T_interp))
+            oxy_dev[:]=np.NaN
+            
             P=surfP_val # dbar
             for i in np.arange(len(surf_density)):
                 # Calculate absolute salinity
@@ -552,11 +558,18 @@ for b in np.arange(len(floatlist)):
                 # Calculate conservative temp or temp
                 T=surf_T_interp[i]
                 
-                #CT=gsw.CT_from_t(SA, T, P)
+                CT=gsw.CT_from_t(SA, T, P)
                 
                 # Calculate density
-                dense=gsw.density.rho_t_exact(SA, T, P) # kg/m^3
+                #dense=gsw.density.rho_t_exact(SA, T, P) # kg/m^3
+                dense=gsw.density.sigma0(SA,CT)+1000
                 surf_density[i]=dense
+                
+                # Calculate oxygen saturation at each point 
+                O2_sol=gsw.O2sol(SA,CT,P,surf_lon_interp[i],surf_lat_interp[i])
+                oxy_sat[i]=np.round(surf_O_interp[i]/O2_sol*100,2)
+                oxy_dev[i]=surf_O_interp[i]-O2_sol
+                
             
             # Convert oxygen to appropriate units
             surf_O_interp_units = np.multiply(surf_O_interp, surf_density)*(10**-6)
@@ -567,6 +580,8 @@ for b in np.arange(len(floatlist)):
             Fc_L13_float[:]=np.NaN
             Fp_L13_float=np.zeros(len(date_6hr))
             Fp_L13_float[:]=np.NaN
+            K_L13=np.zeros(len(date_6hr))
+            K_L13[:]=np.NaN
             
             Fd_N16_float=np.zeros(len(date_6hr))
             Fd_N16_float[:]=np.NaN
@@ -574,6 +589,8 @@ for b in np.arange(len(floatlist)):
             Fc_N16_float[:]=np.NaN
             Fp_N16_float=np.zeros(len(date_6hr))
             Fp_N16_float[:]=np.NaN
+            K_N16=np.zeros(len(date_6hr))
+            K_N16[:]=np.NaN
             
             # For each point in time
             print('\nFinding Nearest Neighbor...\n')
@@ -638,9 +655,10 @@ for b in np.arange(len(floatlist)):
                     Fd_L13_float[i]=Fd_L13
                     Fc_L13_float[i]=Fc_L13
                     Fp_L13_float[i]=Fp_L13
+                    K_L13[i]=k_L13
                     
                     # Outputs 
-                    # Fd = surface gas flux mmol/m^2-s
+                    # Fd = surface gas flux mol/m^2-s
                     # Fc = flyx from fully collapsing large bubbles
                     # Fp = flux from partially collapsing large bubbles
                     # Deq = equilibirum saturation ( %sat/100)
@@ -650,10 +668,11 @@ for b in np.arange(len(floatlist)):
                     ##############
                     ## N16 #######
                     #def N16(C,u10,SP,pt,*,slp=1.0,gas=None,rh=1.0,chi_atm=None):
-                    [Fd_N16, Fc_N16, Fp_N16, Deq_N16, k__N16]=AS.N16(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
+                    [Fd_N16, Fc_N16, Fp_N16, Deq_N16, k_N16]=AS.N16(C=c,u10=U10, SP=S, pt=T, slp=SLP, gas='O2', rh=1)
                     Fd_N16_float[i]=Fd_N16
                     Fc_N16_float[i]=Fc_N16
                     Fp_N16_float[i]=Fp_N16
+                    K_N16[i]=k_N16
                          
             print('\nCalculating Total Air-Sea Flux...\n')
             Ft_L13_float=Fd_L13_float+Fc_L13_float+Fp_L13_float
@@ -664,7 +683,7 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (L13) for Float '+str(WMO))
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_L13_Total_RAW.jpg')
@@ -676,7 +695,7 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (N16) for Float '+str(WMO))
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_RAW.jpg')
@@ -721,25 +740,43 @@ for b in np.arange(len(floatlist)):
             Ft_N16_MA_24hr=Fd_N16_MA_24hr+Fc_N16_MA_24hr+Fp_N16_MA_24hr
             Ft_N16_MA_1wk=Fd_N16_MA_1wk+Fc_N16_MA_1wk+Fp_N16_MA_1wk
             
+            ## oxygen values
+            df_Oxy_Sat=pd.DataFrame({'Oxy_Sat': oxy_sat})
+            Oxy_Sat_24hr=df_Oxy_Sat.rolling(int((24/6)),min_periods=1).mean()
+            Oxy_Sat_1wk=df_Oxy_Sat.rolling(int((7*24)/6),min_periods=1).mean()
+            
+            df_Oxy_Dev=pd.DataFrame({'Oxy_Dev': oxy_dev})
+            Oxy_Dev_24hr=df_Oxy_Dev.rolling(int((24/6)),min_periods=1).mean()
+            Oxy_Dev_1wk=df_Oxy_Dev.rolling(int((7*24)/6),min_periods=1).mean()
+            
+            ## oxygen values
+            df_K_N16=pd.DataFrame({'K': K_N16})
+            k_N16_24hr=df_K_N16.rolling(int((24/6)),min_periods=1).mean()
+            k_N16_1wk=df_K_N16.rolling(int((7*24)/6),min_periods=1).mean()
+            
+            df_K_L13=pd.DataFrame({'K': K_L13})
+            k_L13_24hr=df_K_L13.rolling(int((24/6)),min_periods=1).mean()
+            k_L13_1wk=df_K_L13.rolling(int((7*24)/6),min_periods=1).mean()
+            
             # Break down by component
             ## L13 ## 
             figs, axs=plt.subplots(4,1,figsize=(10,9))
             ## Surface Flux ##
             axs[0].plot(date_6hr_reform, Fd_L13_float, date_6hr_reform, Fd_L13_MA_24hr,date_6hr_reform,Fd_L13_MA_1wk)
-            axs[0].set_title('Surface Gas Flux (mmol/m^2-s)')
+            axs[0].set_title('Surface Gas Flux (mol/m^2-s)')
             #axs[0].legend(['Raw','24-hr average','1-week average'])
             ## Small Bubble ##
             axs[1].plot(date_6hr_reform, Fc_L13_float, date_6hr_reform, Fc_L13_MA_24hr,date_6hr_reform,Fc_L13_MA_1wk)
-            axs[1].set_title('Small Bubble Gas Flux (mmol/m^2-s)')
+            axs[1].set_title('Small Bubble Gas Flux (mol/m^2-s)')
             #axs[1].legend(['Raw','24-hr average','1-week average'])
             
             ## Large Bubble ##
             axs[2].plot(date_6hr_reform, Fp_L13_float, date_6hr_reform, Fp_L13_MA_24hr,date_6hr_reform,Fp_L13_MA_1wk)
-            axs[2].set_title('Large Bubble Gas Flux (mmol/m^2-s)')
+            axs[2].set_title('Large Bubble Gas Flux (mol/m^2-s)')
             #axs[2].legend(['Raw','24-hr average','1-week average'])
             ## Total ##
             axs[3].plot(date_6hr_reform, Ft_L13_float, date_6hr_reform, Ft_L13_MA_24hr,date_6hr_reform,Ft_L13_MA_1wk)
-            axs[3].set_title('Total Air-Sea Gas Flux (mmol/m^2-s)')
+            axs[3].set_title('Total Air-Sea Gas Flux (mol/m^2-s)')
             #axs[3].legend(['Raw','24-hr average','1-week average'])
             
             for ax in axs.flat:
@@ -760,20 +797,20 @@ for b in np.arange(len(floatlist)):
             figs, axs=plt.subplots(4,1,figsize=(10,9))
             ## Surface Flux ##
             axs[0].plot(date_6hr_reform, Fd_N16_float, date_6hr_reform, Fd_N16_MA_24hr,date_6hr_reform,Fd_N16_MA_1wk)
-            axs[0].set_title('Surface Gas Flux (mmol/m^2-s)')
+            axs[0].set_title('Surface Gas Flux (mol/m^2-s)')
             #axs[0].legend(['Raw','24-hr average','1-week average'])
             ## Small Bubble ##
             axs[1].plot(date_6hr_reform, Fc_N16_float, date_6hr_reform, Fc_N16_MA_24hr,date_6hr_reform,Fc_N16_MA_1wk)
-            axs[1].set_title('Small Bubble Gas Flux (mmol/m^2-s)')
+            axs[1].set_title('Small Bubble Gas Flux (mol/m^2-s)')
             #axs[1].legend(['Raw','24-hr average','1-week average'])
             
             ## Large Bubble ##
             axs[2].plot(date_6hr_reform, Fp_N16_float, date_6hr_reform, Fp_N16_MA_24hr,date_6hr_reform,Fp_N16_MA_1wk)
-            axs[2].set_title('Large Bubble Gas Flux (mmol/m^2-s)')
+            axs[2].set_title('Large Bubble Gas Flux (mol/m^2-s)')
             #axs[2].legend(['Raw','24-hr average','1-week average'])
             ## Total ##
             axs[3].plot(date_6hr_reform, Ft_N16_float, date_6hr_reform, Ft_N16_MA_24hr,date_6hr_reform,Ft_N16_MA_1wk)
-            axs[3].set_title('Total Air-Sea Gas Flux (mmol/m^2-s)')
+            axs[3].set_title('Total Air-Sea Gas Flux (mol/m^2-s)')
             #axs[3].legend(['Raw','24-hr average','1-week average'])
             
             for ax in axs.flat:
@@ -797,7 +834,7 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (L13) with 24-hr Average for Float '+str(WMO), y=1.05)
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_L13_Total_24hr.jpg')
@@ -809,7 +846,7 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (N16) with 24-hr Average for Float '+str(WMO), y=1.05)
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_24hr.jpg')
@@ -823,7 +860,7 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (L13) with 1-week Average for Float '+str(WMO),y=1.05)
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_L13_Total_1week.jpg')
@@ -835,127 +872,200 @@ for b in np.arange(len(floatlist)):
             plt.legend(['Total Air-Sea Flux','Surface Gas Flux','Small Bubble Flux','Large Bubble Flux'])
             plt.xlabel('Date')
             plt.xticks(rotation=45)
-            plt.ylabel('Flux (mmol/m^2-s)')
+            plt.ylabel('Flux (mol/m^2-s)')
             plt.title('Air-Sea Oxygen Flux (N16) with 1-week Average for Float '+str(WMO),y=1.05)
             plt.subplots_adjust(bottom=0.2)
             plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_1week.jpg')
             plt.close()
             
+            ## Oxygen ##
+            
+            ## Saturation ##
+            ## N16 ##
+            fig, ax1=plt.subplots(figsize=(15,fsize_y))
+            ax1.plot(date_6hr_reform, Ft_N16_MA_1wk,color='blue',label='Flux')
+            ax1.set_ylabel('Flux (mol/m^2-s)',color='b')
+            ax2=ax1.twinx()
+            ax2.plot(date_6hr_reform, Oxy_Sat_1wk,color='red',label='Oxygen')
+            ax2.set_ylabel('Oxygen Saturation (%)',color='r')
+            
+            ax3=ax1.twinx()
+            ax3.plot(date_6hr_reform, k_N16_1wk,color='green',label='K')
+            ax3.set_ylabel('Gas transfer velocity (m/s)',color='g')
+            ax3.spines["right"].set_position(("outward",50))
+            fig.suptitle('Air-Sea Oxygen Flux (N16) with 1-week Average for Float '+str(WMO))
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_1week_OxySat.jpg',bbox_inches='tight')
+            plt.close()
+            
+            ## L13 ##
+            fig, ax1=plt.subplots(figsize=(15,fsize_y))
+            ax2=ax1.twinx()
+            ax1.plot(date_6hr_reform, -Ft_L13_MA_1wk,color='blue')
+            ax1.set_ylabel('Flux (mol/m^2-s)',color='b')
+            ax2.plot(date_6hr_reform, Oxy_Sat_1wk,color='red')
+            ax2.set_ylabel('Oxygen Saturation (%)',color='r')
+            ax3=ax1.twinx()
+            ax3.plot(date_6hr_reform, k_L13_1wk,color='green')
+            ax3.set_ylabel('Gas transfer velocity (m/s)',color='g')
+            ax3.spines["right"].set_position(("outward",50))
+            fig.suptitle('Air-Sea Oxygen Flux (L13) with 1-week Average for Float '+str(WMO))
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_L13_Total_1week_OxySat.jpg')
+            plt.close()
+            
+            ## Deviation 
+            ## N16 ##
+            fig, ax1=plt.subplots(figsize=(15,fsize_y))
+            ax2=ax1.twinx()
+            ax1.plot(date_6hr_reform, Ft_N16_MA_1wk,color='blue')
+            ax1.set_ylabel('Flux (mol/m^2-s)',color='b')
+            ax2.plot(date_6hr_reform, Oxy_Dev_1wk,color='red')
+            ax2.set_ylabel('Equilibiurm Saturation Deviation (µmol/kg)',color='r')
+            ax3=ax1.twinx()
+            ax3.plot(date_6hr_reform, k_N16_1wk,color='green',label='K')
+            ax3.set_ylabel('Gas transfer velocity (m/s)',color='g')
+            ax3.spines["right"].set_position(("outward",50))
+            fig.suptitle('Air-Sea Oxygen Flux (N16) with 1-week Average for Float '+str(WMO))
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_N16_Total_1week_OxyDev.jpg')
+            plt.close()
+            
+            ## L13 ##
+            fig, ax1=plt.subplots(figsize=(15,fsize_y))
+            ax2=ax1.twinx()
+            ax1.plot(date_6hr_reform, -Ft_L13_MA_1wk,color='blue')
+            ax1.set_ylabel('Flux (mol/m^2-s)',color='b')
+            ax2.plot(date_6hr_reform, Oxy_Dev_1wk,color='red')
+            ax2.set_ylabel('Equilibiurm Saturation Deviation (µmol/kg)',color='r')
+            ax3=ax1.twinx()
+            ax3.plot(date_6hr_reform, k_L13_1wk,color='green')
+            ax3.set_ylabel('Gas transfer velocity (m/s)',color='g')
+            ax3.spines["right"].set_position(("outward",50))
+            fig.suptitle('Air-Sea Oxygen Flux (L13) with 1-week Average for Float '+str(WMO))
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
+            plt.savefig(FigDir+str(WMO)+'_AirSeaFlux_Oxy_L13_Total_1week_OxyDev.jpg')
+            plt.close()
             flux_count[b]=1
             
             WMO_df=np.zeros(len(date_6hr_reform))
             WMO_df[:]=WMO
             TotalAirSea=pd.DataFrame({'WMO':WMO_df,'Date': date_6hr_reform,'Lat': surf_lat_interp, 'Lon': surf_lon_interp,'Fp_L13': Fp_L13_float,'Fc_L13': Fc_L13_float,'Fd_L13': Fd_L13_float, 'Ft_L13': Ft_L13_float,
-                                      'Fp_N16': Fp_N16_float,'Fc_N16': Fc_N16_float,'Fd_N16': Fd_N16_float, 'Ft_N16': Ft_N16_float})
+                                      'Fp_N16': Fp_N16_float,'Fc_N16': Fc_N16_float,'Fd_N16': Fd_N16_float, 'Ft_N16': Ft_N16_float,'Oxy_Sat': oxy_sat, 'Oxy_Dev': oxy_dev})
             TotalAirSea.to_csv(CSVDir_AS+str(WMO)+'.csv')
-        
-        if depth_time_interp == 1:
-            ###### DEPTH INTERPOLATION ###########
-            pres_range=np.arange(step_P,maxP_sec+1,step_P)
-            temp_interp_p=np.zeros((len(pres_range),pres.shape[0]))
-            temp_interp_p[:]=np.NaN
-            sal_interp_p=np.zeros((len(pres_range),pres.shape[0]))
-            sal_interp_p[:]=np.NaN
-            doxy_interp_p=np.zeros((len(pres_range),pres.shape[0]))
-            doxy_interp_p[:]=np.NaN
-            
-            # Depth and time interpolated variables
-            temp_pt=np.zeros((len(pres_range), len(date_6hr)))
-            temp_pt[:]=np.NaN
-            sal_pt=np.zeros((len(pres_range), len(date_6hr)))
-            sal_pt[:]=np.NaN
-            oxy_pt=np.zeros((len(pres_range), len(date_6hr)))
-            oxy_pt[:]=np.NaN
     
-            ######################################
-            for i in np.arange(len(pres)):
-                
-                ## Depth interpolation ##
-                temp_f=interpolate.interp1d(pres[i], temp[i])
-                sal_f=interpolate.interp1d(pres[i], sal[i])
-                doxy_f=interpolate.interp1d(pres[i],doxy[i])
-                
-                # Not every float goes as deep/shallow as specified pressure range
-                # Go through and find shallowest and deepest profile measurements
-                # and use subsection of pres_range so interpolation works
-                # interpolate to desired pressure range
-                
-                ## get subset of press range
-                minP_sub=np.nanmin(pres[i])
-                maxP_sub=np.nanmax(pres[i])
-                
-                if minP_sub%step_P == 0:
-                    startind_P=int(minP_sub//step_P)+1
-                else:
-                    startind_P=int(minP_sub//step_P)
-                
-                if maxP_sub >= maxP_sec:
-                    endind_P=len(pres_range)+1
-                else:
-                    endind_P=int(maxP_sub//step_P)
-                
-                temp_interp_p[startind_P:endind_P,i]=temp_f(pres_range[startind_P:endind_P])
-                sal_interp_p[startind_P:endind_P,i]=sal_f(pres_range[startind_P:endind_P])
-                doxy_interp_p[startind_P:endind_P,i]=doxy_f(pres_range[startind_P:endind_P])
+        
+        # if depth_time_interp == 1:
+        #     ###### DEPTH INTERPOLATION ###########
+        #     pres_range=np.arange(step_P,maxP_sec+1,step_P)
+        #     temp_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+        #     temp_interp_p[:]=np.NaN
+        #     sal_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+        #     sal_interp_p[:]=np.NaN
+        #     doxy_interp_p=np.zeros((len(pres_range),pres.shape[0]))
+        #     doxy_interp_p[:]=np.NaN
             
-            # for each pressure level interpolate with time
-            for i in np.arange(pres_range.shape[0]):
-                level_temp=temp_interp_p[i,:]
-                level_sal=sal_interp_p[i,:]
-                level_oxy=doxy_interp_p[i,:]
+        #     # Depth and time interpolated variables
+        #     temp_pt=np.zeros((len(pres_range), len(date_6hr)))
+        #     temp_pt[:]=np.NaN
+        #     sal_pt=np.zeros((len(pres_range), len(date_6hr)))
+        #     sal_pt[:]=np.NaN
+        #     oxy_pt=np.zeros((len(pres_range), len(date_6hr)))
+        #     oxy_pt[:]=np.NaN
+    
+        #     ######################################
+        #     for i in np.arange(len(pres)):
                 
-                level_temp_interp=interpolate.interp1d(dates_num, level_temp)
-                level_sal_interp=interpolate.interp1d(dates_num, level_sal)
-                level_oxy_interp=interpolate.interp1d(dates_num, level_oxy)
+        #         ## Depth interpolation ##
+        #         temp_f=interpolate.interp1d(pres[i], temp[i])
+        #         sal_f=interpolate.interp1d(pres[i], sal[i])
+        #         doxy_f=interpolate.interp1d(pres[i],doxy[i])
                 
-                t_pt=level_temp_interp(dates6hr_num)
-                s_pt=level_sal_interp(dates6hr_num)
-                o_pt=level_oxy_interp(dates6hr_num)
+        #         # Not every float goes as deep/shallow as specified pressure range
+        #         # Go through and find shallowest and deepest profile measurements
+        #         # and use subsection of pres_range so interpolation works
+        #         # interpolate to desired pressure range
                 
-                temp_pt[i,:]=t_pt
-                sal_pt[i,:]=s_pt
-                oxy_pt[i,:]=o_pt
+        #         ## get subset of press range
+        #         minP_sub=np.nanmin(pres[i])
+        #         maxP_sub=np.nanmax(pres[i])
+                
+        #         if minP_sub%step_P == 0:
+        #             startind_P=int(minP_sub//step_P)+1
+        #         else:
+        #             startind_P=int(minP_sub//step_P)
+                
+        #         if maxP_sub >= maxP_sec:
+        #             endind_P=len(pres_range)+1
+        #         else:
+        #             endind_P=int(maxP_sub//step_P)
+                
+        #         temp_interp_p[startind_P:endind_P,i]=temp_f(pres_range[startind_P:endind_P])
+        #         sal_interp_p[startind_P:endind_P,i]=sal_f(pres_range[startind_P:endind_P])
+        #         doxy_interp_p[startind_P:endind_P,i]=doxy_f(pres_range[startind_P:endind_P])
+            
+        #     # for each pressure level interpolate with time
+        #     for i in np.arange(pres_range.shape[0]):
+        #         level_temp=temp_interp_p[i,:]
+        #         level_sal=sal_interp_p[i,:]
+        #         level_oxy=doxy_interp_p[i,:]
+                
+        #         level_temp_interp=interpolate.interp1d(dates_num, level_temp)
+        #         level_sal_interp=interpolate.interp1d(dates_num, level_sal)
+        #         level_oxy_interp=interpolate.interp1d(dates_num, level_oxy)
+                
+        #         t_pt=level_temp_interp(dates6hr_num)
+        #         s_pt=level_sal_interp(dates6hr_num)
+        #         o_pt=level_oxy_interp(dates6hr_num)
+                
+        #         temp_pt[i,:]=t_pt
+        #         sal_pt[i,:]=s_pt
+        #         oxy_pt[i,:]=o_pt
             
             
-            X, Y = np.meshgrid(date_6hr_reform, pres_range)
+        #     X, Y = np.meshgrid(date_6hr_reform, pres_range)
             
-            plt.figure(figsize=(fsize_x,fsize_y))
-            plt.contourf(X,Y,temp_pt)
-            plt.gca().invert_yaxis()
-            plt.colorbar()
-            plt.xlabel('Date')
-            plt.xticks(rotation=45)
-            plt.ylabel('Pressure (dbar)')
-            plt.title('Temperature Time Series for Float '+str(WMO))
-            plt.subplots_adjust(bottom=0.2)
-            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Temp.jpg')
-            plt.close()
+        #     plt.figure(figsize=(fsize_x,fsize_y))
+        #     plt.contourf(X,Y,temp_pt)
+        #     plt.gca().invert_yaxis()
+        #     plt.colorbar()
+        #     plt.xlabel('Date')
+        #     plt.xticks(rotation=45)
+        #     plt.ylabel('Pressure (dbar)')
+        #     plt.title('Temperature Time Series for Float '+str(WMO))
+        #     plt.subplots_adjust(bottom=0.2)
+        #     plt.savefig(FigDir+str(WMO)+'_PresDateSection_Temp.jpg')
+        #     plt.close()
             
-            plt.figure(figsize=(fsize_x,fsize_y))
-            plt.contourf(X,Y, sal_pt)
-            plt.gca().invert_yaxis()
-            plt.colorbar()
-            plt.xlabel('Date')
-            plt.xticks(rotation=45)
-            plt.ylabel('Pressure (dbar)')
-            plt.title('Salinity Time Series for Float '+str(WMO))
-            plt.subplots_adjust(bottom=0.2)
-            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Sal.jpg')
-            plt.close()
+        #     plt.figure(figsize=(fsize_x,fsize_y))
+        #     plt.contourf(X,Y, sal_pt)
+        #     plt.gca().invert_yaxis()
+        #     plt.colorbar()
+        #     plt.xlabel('Date')
+        #     plt.xticks(rotation=45)
+        #     plt.ylabel('Pressure (dbar)')
+        #     plt.title('Salinity Time Series for Float '+str(WMO))
+        #     plt.subplots_adjust(bottom=0.2)
+        #     plt.savefig(FigDir+str(WMO)+'_PresDateSection_Sal.jpg')
+        #     plt.close()
             
-            plt.figure(figsize=(fsize_x,fsize_y))
-            plt.contourf(X,Y,oxy_pt)
-            plt.gca().invert_yaxis()
-            plt.colorbar()
-            plt.xlabel('Date')
-            plt.xticks(rotation=45)
-            plt.ylabel('Pressure (dbar)')
-            plt.title('Oxygen Time Series for Float '+str(WMO))
-            plt.subplots_adjust(bottom=0.2)
-            plt.savefig(FigDir+str(WMO)+'_PresDateSection_Oxy.jpg')
-            plt.close()
+        #     plt.figure(figsize=(fsize_x,fsize_y))
+        #     plt.contourf(X,Y,oxy_pt)
+        #     plt.gca().invert_yaxis()
+        #     plt.colorbar()
+        #     plt.xlabel('Date')
+        #     plt.xticks(rotation=45)
+        #     plt.ylabel('Pressure (dbar)')
+        #     plt.title('Oxygen Time Series for Float '+str(WMO))
+        #     plt.subplots_adjust(bottom=0.2)
+        #     plt.savefig(FigDir+str(WMO)+'_PresDateSection_Oxy.jpg')
+        #     plt.close()
             
-            plt.show()
+        #     plt.show()
 
     else:
         print('This float does not measure oxygen')

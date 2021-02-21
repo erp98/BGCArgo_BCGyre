@@ -23,10 +23,11 @@ A new an improved version of BGCArgoPython with better and more organized code :
   - Input: Sorted_DACWMO_<TYPE>Float.txt files and ERA5 wind and SLP data
   - Output: Figures of surface variables (temperature, salinity, oxygen) float trajectory, and air-sea oxygen flux
   - Things To Do:
+    - [ ] Check code values with MATLAB ones
     - [ ] Debug section interpolation code --> no oxygen ?
-    - [ ] Maybe also just have raw data or interpolated to pressure (no time interp)
-    - [ ] Change density to sigma-thera
-    - [ ] Change units for air-sea flux to mol/m^2-s
+    - [ ] Maybe also just have raw data or interpolated to pressure (no time interp --> make this a new script)
+    - [X] Change density to sigma-thera
+    - [X] Change units for air-sea flux to mol/m^2-s
     - [X] Debug section interpolation code (pres x date x parameter)
     - [X] Position check --> remove data not in the correct lat-lon range
     - [X] Quality control check --> remove data that do not have certain QC flag
@@ -37,6 +38,8 @@ A new an improved version of BGCArgoPython with better and more organized code :
   - Notes:
     - Averages values in 5 +/- 3 dbar range
     - If there are no measurements of T, S, or O, gas flux is not calculated
+    - Times:
+      - 2: Boundary Current
 - ***GasFluxTimeSeries.py***:
   - Things To Do:
     - [X] Make monthly averages!
@@ -66,3 +69,8 @@ A new an improved version of BGCArgoPython with better and more organized code :
   - [ ] For MakeBoundaryCurrent:
     - [ ] Figure out why optimization is so effing slow
     - [ ] Maybe try ML or just run with one for now
+
+- go back and check calibration of the one deep float
+- check signs for parameterizations
+- go-ship data check
+- plotly interactive sections

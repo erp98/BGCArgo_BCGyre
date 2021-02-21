@@ -53,7 +53,7 @@ def last_day_of_month(given_date):
         last_day = 28
     elif (given_date.month == 2 and given_date.year%4 == 0):
         # February - leap year
-        last_day = 28
+        last_day = 29
     elif given_date.month == 3:
         # March
         last_day = 31
@@ -141,4 +141,60 @@ def ArgoDataLoader(WMO, DAC):
     
     return Data
 
+def SurfacePIndex (pres, minP, maxP):
+    
+    j=0
+    pressure_check=0
+    pres_ind=[]
+    prev_val=0
+    
+    while j < len(pres) and pressure_check == 0:
+        
+        # Determine if pressure value falls in range 
+        if pres[j] >= minP and pres[j] <= maxP:
+            pres_ind=pres_ind+[j]
+            current_val=1
+        else:
+            current_val=0
+            
+        if current_val == 0 and prev_val == 1:
+            pressure_check=1
+            
+        if current_val == 1:
+            prev_val=1
+        
+        j=j+1
+    
+    return pres_ind
+
+def MatchData2Dates(alldates, dates, L13, L13_24hr, L13_1wk, N16, N16_24hr, N16_1wk):
+    
+    L13_reform=np.zeros(len(alldates))
+    L13_reform[:]=np.NaN
+    L13_24hr_reform=np.zeros(len(alldates))
+    L13_24hr_reform[:]=np.NaN
+    L13_1wk_reform=np.zeros(len(alldates))
+    L13_1wk_reform[:]=np.NaN
+    
+    N16_reform=np.zeros(len(alldates))
+    N16_reform[:]=np.NaN
+    N16_24hr_reform=np.zeros(len(alldates))
+    N16_24hr_reform[:]=np.NaN
+    N16_1wk_reform=np.zeros(len(alldates))
+    N16_1wk_reform[:]=np.NaN
+        
+    for i in np.arange(len(dates)):
+        date_ind=np.where(alldates == dates[i])
+        #print(i)
+        L13_reform[date_ind]=L13[i]
+        L13_24hr_reform[date_ind]=L13_24hr[i]
+        L13_1wk_reform[date_ind]=L13_1wk[i]
+        
+        N16_reform[date_ind]=N16[i]
+        N16_24hr_reform[date_ind]=N16_24hr[i]
+        N16_1wk_reform[date_ind]=N16_1wk[i]
+        
+        a=1
+    return L13_reform,L13_24hr_reform,L13_1wk_reform,N16_reform,N16_24hr_reform,N16_1wk_reform
+    
 
