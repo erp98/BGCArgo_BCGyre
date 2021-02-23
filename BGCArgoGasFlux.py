@@ -72,6 +72,7 @@ lat_S= 40.00
 lon_E= 0.00
 lon_W= -80.00
 
+
 fsize_x=10
 fsize_y=6
 
@@ -166,6 +167,7 @@ flux_count[:]=np.NaN
 
 print('Number of Floats: ',len(floatlist))
 
+prof_count=0
 for b in np.arange(len(floatlist)):
 ### For debugging and looking at specific floats ###
 #for b in [10]:
@@ -408,6 +410,28 @@ for b in np.arange(len(floatlist)):
             print('%% Not Enough Data to Calculate Flux %%')
             print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
         else:
+            
+            # profiles outside region
+            # lat_N=80.000
+            # lat_S= 40.00
+            # lon_E= -30.00
+            # lon_W= -80.00
+            lat_check=np.where(lat>=lat_N, np.NaN, lat)
+            lat_check=np.where(lat<=lat_S, np.NaN, lat_check)
+            
+            lon_check=np.where(lon>=-30, np.NaN, lon)
+            lon_check=np.where(lon<=-80, np.NaN, lon_check)
+            
+            p_count=0
+            for ss in np.arange(len(lat)):
+                
+                if (np.isnan(lat[ss])==True or np.isnan(lon[ss]==True)): 
+                    p_count=p_count+1
+                elif np.isnan(surf_T[ss])==True or np.isnan(surf_S[ss]) == True or np.isnan(surf_O[ss])==True:
+                    p_count=p_count+1
+                    
+            #t_val=np.nanmin((len(surf_T)-sum(np.isnan(surf_T)),len(surf_T)-sum(np.isnan(surf_S)),len(surf_T)-sum(np.isnan(surf_O))))
+            prof_count=prof_count+p_count
             ## Plot surface values vs time
             figs, axs=plt.subplots(3,1, figsize=(fsize_x,fsize_y))
             ## Temp ##
@@ -1085,4 +1109,5 @@ print('Time elapsed (s): ', toc_end-tic_start)
 print('Time elapsed (min): ', (toc_end-tic_start)/60)
 print('Time elapsed (hr): ', (toc_end-tic_start)/(60*60))
 
+print('Prof Count: ', prof_count)
         

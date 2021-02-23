@@ -167,34 +167,46 @@ def SurfacePIndex (pres, minP, maxP):
     
     return pres_ind
 
-def MatchData2Dates(alldates, dates, L13, L13_24hr, L13_1wk, N16, N16_24hr, N16_1wk):
+#def MatchData2Dates(alldates, dates, L13, L13_24hr, L13_1wk, N16, N16_24hr, N16_1wk):
+def MatchData2Dates(alldates, dates, Data):   
     
-    L13_reform=np.zeros(len(alldates))
-    L13_reform[:]=np.NaN
-    L13_24hr_reform=np.zeros(len(alldates))
-    L13_24hr_reform[:]=np.NaN
-    L13_1wk_reform=np.zeros(len(alldates))
-    L13_1wk_reform[:]=np.NaN
+    blankdata=np.zeros((len(alldates), Data.shape[1]))
+    blankdata[:]=np.NaN
     
-    N16_reform=np.zeros(len(alldates))
-    N16_reform[:]=np.NaN
-    N16_24hr_reform=np.zeros(len(alldates))
-    N16_24hr_reform[:]=np.NaN
-    N16_1wk_reform=np.zeros(len(alldates))
-    N16_1wk_reform[:]=np.NaN
+    ReformattedData=pd.DataFrame(blankdata,index=alldates,columns=Data.columns.to_list())
+    
+    # L13_reform=np.zeros(len(alldates))
+    # L13_reform[:]=np.NaN
+    # L13_24hr_reform=np.zeros(len(alldates))
+    # L13_24hr_reform[:]=np.NaN
+    # L13_1wk_reform=np.zeros(len(alldates))
+    # L13_1wk_reform[:]=np.NaN
+    
+    # N16_reform=np.zeros(len(alldates))
+    # N16_reform[:]=np.NaN
+    # N16_24hr_reform=np.zeros(len(alldates))
+    # N16_24hr_reform[:]=np.NaN
+    # N16_1wk_reform=np.zeros(len(alldates))
+    # N16_1wk_reform[:]=np.NaN
         
     for i in np.arange(len(dates)):
-        date_ind=np.where(alldates == dates[i])
         #print(i)
-        L13_reform[date_ind]=L13[i]
-        L13_24hr_reform[date_ind]=L13_24hr[i]
-        L13_1wk_reform[date_ind]=L13_1wk[i]
-        
-        N16_reform[date_ind]=N16[i]
-        N16_24hr_reform[date_ind]=N16_24hr[i]
-        N16_1wk_reform[date_ind]=N16_1wk[i]
-        
+        date_ind=np.where(alldates == dates[i])
+        #print(date_ind)
         a=1
-    return L13_reform,L13_24hr_reform,L13_1wk_reform,N16_reform,N16_24hr_reform,N16_1wk_reform
+        # L13_reform[date_ind]=L13[i]
+        # L13_24hr_reform[date_ind]=L13_24hr[i]
+        # L13_1wk_reform[date_ind]=L13_1wk[i]
+        
+        # N16_reform[date_ind]=N16[i]
+        # N16_24hr_reform[date_ind]=N16_24hr[i]
+        # N16_1wk_reform[date_ind]=N16_1wk[i]
+        #print(Data.iloc[i,:])
+        #print(ReformattedData.iloc[date_ind[0],:])
+        
+        ReformattedData.iloc[date_ind[0][0],:]=Data.iloc[i,:]
+    
+    return ReformattedData
+    # return L13_reform,L13_24hr_reform,L13_1wk_reform,N16_reform,N16_24hr_reform,N16_1wk_reform
     
 

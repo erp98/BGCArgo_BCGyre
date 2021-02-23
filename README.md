@@ -74,3 +74,14 @@ A new an improved version of BGCArgoPython with better and more organized code :
 - check signs for parameterizations
 - go-ship data check
 - plotly interactive sections
+
+Things To Do 2/17
+- [X] Add oxygen saturation/deviation to flux charts
+- [X] Check k - value --> are fluxes dominated by winds or gradient
+- [ ] Expand depth search for oxygen values to include more floats (i.e. to 20 dbar as long as within MLD)
+- [X] Work on boundary float classification
+  - [X] Write BC classification function
+    - [X] Shape
+    - [X] Bathymetry
+  - [X] Modify BGCArgoGasFlux to use profiles instead of pre-sorted text files
+- [ ] Add time series vx. oxygen, MLD, etc

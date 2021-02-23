@@ -551,91 +551,101 @@ print(per_lsg_lsg_tot,' % of points')
 print('%%%%%%%%%%%%%%%%%\n')
 
 
-# #############################
-# ## Calculate float speeds ##
-# ############################
-# bc_floatspeeds=np.zeros(len(All_Lat_BC))
-# bc_floatspeeds[:]=np.NaN
-# bc_scount=0
+#############################
+## Calculate float speeds ##
+############################
+bc_floatspeeds=np.zeros(len(lat_bc))
+bc_floatspeeds[:]=np.NaN
+bc_scount=0
 
-# for wmo in bc_floatlist:
-    
-#     lat_pos=BCData.loc[BCData.loc[:,'WMO']==wmo,'Lat']
-#     lon_pos=BCData.loc[BCData.loc[:,'WMO']==wmo,'Lon']
-#     time_pos=BCData.loc[BCData.loc[:,'WMO']==wmo,'Date']
-    
-#     indlist=lon_pos.index.to_list()
-#     for j in np.arange(len(lat_pos)-1):
-        
-#         i1=indlist[j]
-#         i2=indlist[j+1]
-#         # Calculate change in distance
-#         pos1=np.array((lon_pos[i1],lat_pos[i1]))
-#         pos2=np.array((lon_pos[i2],lat_pos[i2]))
-#         dist=haversine(pos1, pos2, unit='m')
-#         #print(dist)
-        
-#         # Calculate change in time
-#         t1=datetime.strptime(time_pos[i1], '%Y-%m-%d %H:%M:%S')
-#         t2=datetime.strptime(time_pos[i2], '%Y-%m-%d %H:%M:%S')
-#         tt=(t2-t1).total_seconds()
-#         #print(tt)
-        
-#         bc_floatspeeds[bc_scount]=dist/tt
-#         bc_scount=bc_scount+1
-    
-#     # plt.figure(1)
-#     # plt.plot(bc_floatspeeds)
+BC_F_Data=AllCheckList.iloc[:bc_count,:]
+LSG_F_Data=AllCheckList.iloc[bc_count:,:]
 
-# ## Calculate float speeds
-# lsg_floatspeeds=np.zeros(len(All_Lat_LSG))
-# lsg_floatspeeds[:]=np.NaN
-# lsg_scount=0
+bc_f_floatlist= BC_F_Data.loc[:,'WMO'].unique().tolist()
+lsg_f_floatlist= LSG_F_Data.loc[:,'WMO'].unique().tolist()
 
-# for wmo in lsg_floatlist:
+for wmo in bc_f_floatlist:
     
-#     lat_pos=LSGData.loc[LSGData.loc[:,'WMO']==wmo,'Lat']
-#     lon_pos=LSGData.loc[LSGData.loc[:,'WMO']==wmo,'Lon']
-#     time_pos=LSGData.loc[LSGData.loc[:,'WMO']==wmo,'Date']
+    lat_pos=BC_F_Data.loc[BC_F_Data.loc[:,'WMO']==wmo,'Lat']
+    lon_pos=BC_F_Data.loc[BC_F_Data.loc[:,'WMO']==wmo,'Lon']
+    time_pos=BC_F_Data.loc[BC_F_Data.loc[:,'WMO']==wmo,'Date']
     
-#     indlist=lon_pos.index.to_list()
-#     for j in np.arange(len(lat_pos)-1):
+    indlist=lon_pos.index.to_list()
+    for j in np.arange(len(lat_pos)-1):
         
-#         i1=indlist[j]
-#         i2=indlist[j+1]
-#         # Calculate change in distance
-#         pos1=np.array((lon_pos[i1],lat_pos[i1]))
-#         pos2=np.array((lon_pos[i2],lat_pos[i2]))
-#         dist=haversine(pos1, pos2, unit='m')
-#         #print(dist)
+        i1=indlist[j]
+        i2=indlist[j+1]
+        # Calculate change in distance
+        pos1=np.array((lon_pos[i1],lat_pos[i1]))
+        pos2=np.array((lon_pos[i2],lat_pos[i2]))
+        dist=haversine(pos1, pos2, unit='m')
+        #print(dist)
         
-#         # Calculate change in time
-#         t1=datetime.strptime(time_pos[i1], '%Y-%m-%d %H:%M:%S')
-#         t2=datetime.strptime(time_pos[i2], '%Y-%m-%d %H:%M:%S')
-#         tt=(t2-t1).total_seconds()
-#         #print(tt)
+        # Calculate change in time
+        # t1=datetime.strptime(time_pos[i1], '%Y-%m-%d %H:%M:%S')
+        # t2=datetime.strptime(time_pos[i2], '%Y-%m-%d %H:%M:%S')
+        t1=time_pos[i1]
+        t2=time_pos[i2]
+        tt=(t2-t1).total_seconds()
+        #print(tt)
         
-#         lsg_floatspeeds[lsg_scount]=dist/tt
-#         lsg_scount=lsg_scount+1
+        bc_floatspeeds[bc_scount]=dist/tt
+        bc_scount=bc_scount+1
     
-#     # plt.figure(2)
-#     # plt.plot(lsg_floatspeeds)
-#     # plt.pause(2)
+    # plt.figure(1)
+    # plt.plot(bc_floatspeeds)
+
+## Calculate float speeds
+lsg_floatspeeds=np.zeros(len(lat_lsg))
+lsg_floatspeeds[:]=np.NaN
+lsg_scount=0
+
+for wmo in lsg_f_floatlist:
     
-# lsg_floatspeeds = lsg_floatspeeds[~np.isnan(lsg_floatspeeds)]
+    lat_pos=LSG_F_Data.loc[LSG_F_Data.loc[:,'WMO']==wmo,'Lat']
+    lon_pos=LSG_F_Data.loc[LSG_F_Data.loc[:,'WMO']==wmo,'Lon']
+    time_pos=LSG_F_Data.loc[LSG_F_Data.loc[:,'WMO']==wmo,'Date']
+    
+    indlist=lon_pos.index.to_list()
+    for j in np.arange(len(lat_pos)-1):
+        
+        i1=indlist[j]
+        i2=indlist[j+1]
+        # Calculate change in distance
+        pos1=np.array((lon_pos[i1],lat_pos[i1]))
+        pos2=np.array((lon_pos[i2],lat_pos[i2]))
+        dist=haversine(pos1, pos2, unit='m')
+        #print(dist)
+        
+        # Calculate change in time
+        # t1=datetime.strptime(time_pos[i1], '%Y-%m-%d %H:%M:%S')
+        # t2=datetime.strptime(time_pos[i2], '%Y-%m-%d %H:%M:%S')
+        t1=time_pos[i1]
+        t2=time_pos[i2]
+        tt=(t2-t1).total_seconds()
+        #print(tt)
+        
+        lsg_floatspeeds[lsg_scount]=dist/tt
+        lsg_scount=lsg_scount+1
+    
+    # plt.figure(2)
+    # plt.plot(lsg_floatspeeds)
+    # plt.pause(2)
+    
+lsg_floatspeeds = lsg_floatspeeds[~np.isnan(lsg_floatspeeds)]
+bc_floatspeeds = bc_floatspeeds[~np.isnan(bc_floatspeeds)]
 
+plt.figure()
+plt.hist(lsg_floatspeeds)
+plt.hist(bc_floatspeeds)
+plt.legend(['Gyre','BC'])
 
-# plt.figure()
-# plt.hist(lsg_floatspeeds)
-# plt.hist(bc_floatspeeds)
-# plt.legend(['Gyre','BC'])
-
-# print('\n%%%%%%%%%% RESULTS %%%%%%%%%%%\n')
-# print('Boundary Current')
-# print('Mean speed (m/s): ', np.nanmean(bc_floatspeeds))
-# print('Std: ',np.nanstd(bc_floatspeeds))
-# print('\nGyre')
-# print('Mean speed (m/s): ', np.nanmean(lsg_floatspeeds))
-# print('Std: ',np.nanstd(lsg_floatspeeds))
+print('\n%%%%%%%%%% RESULTS %%%%%%%%%%%\n')
+print('Boundary Current')
+print('Mean speed (m/s): ', np.nanmean(bc_floatspeeds))
+print('Std: ',np.nanstd(bc_floatspeeds))
+print('\nGyre')
+print('Mean speed (m/s): ', np.nanmean(lsg_floatspeeds))
+print('Std: ',np.nanstd(lsg_floatspeeds))
 
 

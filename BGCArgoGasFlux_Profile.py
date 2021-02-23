@@ -43,6 +43,17 @@ with open(Argofiles) as fp:
         
 # Load float data
 
+MODEL_TYPE=1
+# 0: BC by Shape
+# 1: BC by bathymetry
+
+if MODEL_TYPE==0:
+    CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BC_Shape/'
+    print('\nUSING SHAPE MODEL\n')
+elif MODEL_TYPE == 1:
+    CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BC_Bath/'
+    print('\nUSING BATHYMETRY MODEL\n')
+    
 #####################
 ## Some parameters ##
 #####################
@@ -109,7 +120,7 @@ GyreData=pd.DataFrame({'FloatWMO': [np.NaN], 'ProfNum': [np.NaN],'Date':[np.NaN]
                      'k_N16': [np.NaN],'Fp_N16': [np.NaN],'Fc_N16': [np.NaN],'Fd_N16': [np.NaN], 'Ft_N16': [np.NaN]})
 
 for i in np.arange(len(ArgoWMO)):
-#for i in [92]:
+#for i in [124]:
     tic2=time.time()
     
     dac=ArgoDac[i]
@@ -175,7 +186,10 @@ for i in np.arange(len(ArgoWMO)):
                 # Make sure profile is in the generally correct region and a valid position
                 if (lat[j]<=lat_N and lat[j]>=lat_S and lon[j]>=lon_W and lon[j]<=lon_E and np.isnan(lat[j]) == False and np.isnan(lon[j]) == False):
                     # Detetmine if data point is BC, Gyre, N/A
-                    bc_flag=BCF.BoundaryCurrent_Shape(Lon=lon[j], Lat=lat[j])
+                    if MODEL_TYPE==0:
+                        bc_flag=BCF.BoundaryCurrent_Shape(Lon=lon[j], Lat=lat[j])
+                    elif MODEL_TYPE==1:
+                        bc_flag=BCF.BoundaryCurrent_Bath(Lon=lon[j], Lat=lat[j])
                     
                     if np.isnan(bc_flag)==False:
                         # If it is within one of the two shapes, proceed with analyis
@@ -242,7 +256,10 @@ for i in np.arange(len(ArgoWMO)):
                                             last_day = RF.last_day_of_month(prof_date)
                     
                                             if prof_date.day == last_day:
-                                                roundup_date=datetime(prof_date.year, prof_date.month+1, 1, 0, 0, 0 )
+                                                if prof_date.month == 12:
+                                                    roundup_date=datetime(prof_date.year+1, 1, 1, 0, 0, 0 )
+                                                else:
+                                                    roundup_date=datetime(prof_date.year, prof_date.month+1, 1, 0, 0, 0 )
                                             else:
                                                 roundup_date=datetime(prof_date.year, prof_date.month, prof_date.day+1,0,0, 0)
                                         else:
@@ -364,7 +381,6 @@ for i in np.arange(len(ArgoWMO)):
     print(toc2-tic2,' seconds elapsed')
     print((toc2-tic2)/60,' minutes elapsed')
 
-CSVDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BC_Shape/'
 print('\n%% Saving adjusted variable flags %%\n')
 adj_df=pd.DataFrame({'FileName': ArgoDACWMO, 'FloatWMO': ArgoWMO, 'Pres_Adj': pres_flag_total,'Temp_Adj': temp_flag_total,'Sal_Adj': sal_flag_total, 'Oxy_Adj':oxy_flag_total,'Flux_Calc': flux_count})
 adj_df=adj_df.sort_values(by=['FloatWMO'])

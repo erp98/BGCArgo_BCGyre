@@ -11,6 +11,8 @@ from scipy.spatial import ConvexHull
 import numpy as np
 import glob
 import pandas as pd
+import xarray as xr
+from scipy.spatial import KDTree
 
 # Labrador Sea Region
 lab_N=65
@@ -200,6 +202,54 @@ def BoundaryCurrent_Shape(Lon, Lat):
 
     
     return bc_flag
+    
+
+########################
+########################
+########################
+# Load bathmyetry data
+BathFile='/Users/Ellen/Desktop/GEBCO/gebco_2020_n70.0_s40.0_w-70.0_e-30.0.nc'
+BathData = xr.open_dataset(BathFile)
+
+BathLat=BathData.lat.values
+BathLon=BathData.lon.values
+BathHeight=BathData.elevation.values
+BathHeight=np.where(BathHeight>0, np.NaN, BathHeight)
+BathHeight=BathHeight*-1
+
+C1000=np.where(BathHeight!=1000, np.NaN, BathHeight)
+BX, BY = np.meshgrid(BathLon, BathLat)
+a=np.where(np.isnan(C1000)==False)
+cont_lat=np.zeros((len(a[0])))
+cont_lat[:]=np.NaN
+
+cont_lon=np.zeros((len(a[0])))
+cont_lon[:]=np.NaN
+
+for f in np.arange(len(a[0])):
+    i=a[0][f]
+    j=a[1][f]
+    cont_lon[f]=BX[i,j]
+    cont_lat[f]=BY[i,j]
+            
+cont_lon =cont_lon[~np.isnan(cont_lon)] 
+cont_lat =cont_lat[~np.isnan(cont_lat)] 
+       
+tree = KDTree(np.c_[cont_lon, cont_lat])
+
+def BoundaryCurrent_Bath(Lon, Lat):
+    bc_dist=2.2
+    bc_flag=np.NaN
+    dd, ii = tree.query([Lon,Lat])
+    
+    if dd<= bc_dist:   
+        bc_flag=1
+    else:
+        bc_flag=0
+        
+    return bc_flag
+    
+    
     
     
     
