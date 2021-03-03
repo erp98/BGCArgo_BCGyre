@@ -8,6 +8,8 @@ Created on Thu Jan 14 11:10:59 2021
 import numpy as np
 import pandas as pd
 import xarray as xr
+import gsw
+import matplotlib.pyplot as plt
 
 def DetermineAdjusted(raw_data, raw_data_QC,a_data, a_data_QC):
     # raw_data = not adjusted BGC Argo data
@@ -167,7 +169,7 @@ def SurfacePIndex (pres, minP, maxP):
     
     return pres_ind
 
-#def MatchData2Dates(alldates, dates, L13, L13_24hr, L13_1wk, N16, N16_24hr, N16_1wk):
+
 def MatchData2Dates(alldates, dates, Data):   
     
     blankdata=np.zeros((len(alldates), Data.shape[1]))
@@ -207,6 +209,101 @@ def MatchData2Dates(alldates, dates, Data):
         ReformattedData.iloc[date_ind[0][0],:]=Data.iloc[i,:]
     
     return ReformattedData
-    # return L13_reform,L13_24hr_reform,L13_1wk_reform,N16_reform,N16_24hr_reform,N16_1wk_reform
-    
 
+def MLD(Pres, Temp, Sal, Lat, Lon):
+    MinSurfP=0
+    MaxSurfP=10
+     
+    j=0
+    surf_flag=0
+    surf_pres_i=[]
+    
+    dense_offset=.3
+    while (j<len(Pres) and surf_flag ==0):
+        if (Pres[j]>= MinSurfP and Pres[j] <= MaxSurfP):
+            surf_pres_i=surf_pres_i+[j]
+        
+        if Pres[j] > MaxSurfP:
+            surf_flag=1
+        
+        j=j+1
+    
+    if surf_pres_i != []:
+        
+        #print(surf_pres_i)
+        s_start=surf_pres_i[0]
+        s_end=surf_pres_i[-1]+1
+        #print(s_start, s_end)
+        P_mean=np.nanmean(Pres[s_start:s_end])
+        
+        # Calculate density
+        SA=gsw.SA_from_SP(Sal,Pres,Lat,Lon)
+        #print(SA)
+        CT=gsw.CT_from_t(SA,Temp,P_mean)
+        #print(CT)
+        density = np.zeros(len(Pres))
+        density[:]=np.NaN
+        
+        for k in np.arange(len(density)):
+            density[k]=gsw.density.sigma0(SA=SA[k],CT=CT[k])
+        
+        surf_dense=np.nanmean(density[s_start:s_end])
+        #print(surf_dense)
+        mld_dense=surf_dense+dense_offset
+        
+        #print(mld_dense)
+        # Find MLD
+        mld_flag=0
+        inter_flag=np.NaN
+        mld_pres=np.NaN
+        
+        L_P=np.NaN
+        L_D=np.NaN
+        M_P=np.NaN
+        M_D=np.NaN
+        
+        j = s_end -1
+        # Start search at base of surface layer
+        while(j<len(density) and mld_flag ==0):
+        
+            if density[j] == mld_dense:
+                mld_pres=Pres[j]
+                mld_flag=1
+            elif density[j]<mld_dense:
+                L_P=Pres[j]
+                L_D=density[j]
+            elif density[j]>mld_dense:
+                M_P=Pres[j]
+                M_D=density[j]
+                inter_flag=1
+                mld_flag=1
+            
+            j=j+1
+        
+        if (np.isnan(mld_flag) == True):
+            # Ran through entire profile and did not find mld
+            # i.e. MLD is deeper than deepest pressure measurement
+            # So make md deepest pressure measurement
+            # OR 2000 dbar?
+            mld_pres=np.nanmax(Pres)
+        elif (np.isnan(mld_flag)== False and inter_flag == 1):
+            # Need to interpolate to get MLD
+            mld_pres=M_D-(((M_D-mld_dense)/(M_D-L_D))*(M_P-L_P))
+        elif (np.isnan(mld_flag)== False and inter_flag == 0):
+            mld_pres=mld_pres
+        else:
+            print('ERROR')
+        
+        # plt.figure()
+        # plt.plot(density, Pres)
+        # plt.gca().invert_yaxis()
+        # plt.show()
+        
+    else:
+        mld_pres=np.NaN
+    
+    return mld_pres
+        
+        
+        
+            

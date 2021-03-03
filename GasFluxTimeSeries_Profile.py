@@ -29,8 +29,8 @@ elif MODEL_TYPE ==1:
     print('\nUSING BATHYMETRY MODEL\n')
     
 
-lat_N=80.000
-lat_S= 40.00
+lat_N=65.000
+lat_S= 48.00
 lon_E= -30.00
 lon_W= -80.00
 

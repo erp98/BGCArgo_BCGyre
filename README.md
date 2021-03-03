@@ -85,3 +85,4 @@ Things To Do 2/17
     - [X] Bathymetry
   - [X] Modify BGCArgoGasFlux to use profiles instead of pre-sorted text files
 - [ ] Add time series vx. oxygen, MLD, etc
+- [ ] Organization: Update readme for all of the new scripts

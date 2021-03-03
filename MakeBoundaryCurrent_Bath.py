@@ -18,6 +18,7 @@ from scipy.stats import ttest_ind
 # Load bathmyetry data
 BathFile='/Users/Ellen/Desktop/GEBCO/gebco_2020_n70.0_s40.0_w-70.0_e-30.0.nc'
 BathData = xr.open_dataset(BathFile)
+FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/MakeBC_Bath/'
 
 print('Making bath contours...')
 
@@ -39,6 +40,7 @@ plt.contour(BX, BY, BathHeight, levels=[1000,1500,2000])
 # plt.pcolormesh(BX, BY, C1500)
 # plt.pcolormesh(BX, BY, C2000)
 plt.colorbar()
+plt.savefig(FigDir+'BathContours.jpg'); plt.close()
 
 # load float data
 lab_N=65
@@ -243,6 +245,7 @@ plt.figure()
 plt.hist(gyre_dist, color='orange')
 plt.hist(bc_dist, color='blue')
 plt.legend(['Gyre','Boundary Current'])
+plt.savefig(FigDir+'DistanceHistogram.jpg'); plt.close()
 
 print('\n%%%%%%%%%% RESULTS %%%%%%%%%%%\n')
 print('Boundary Current')
@@ -256,6 +259,7 @@ plt.figure()
 plt.contour(BX, BY, BathHeight, levels=[1000,1500,2000])
 plt.scatter(lon_bc,lat_bc, s=1)
 plt.scatter(lon_lsg,lat_lsg, s=1)
+plt.savefig(FigDir+'RawProfiles.jpg'); plt.close()
 
 print('T-Test Results...')
 print(ttest_ind(bc_dist,gyre_dist))
@@ -347,6 +351,7 @@ Dist_df.to_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BCDistance
 
 plt.figure()
 plt.plot(Dist_df.loc[:,'BC_BC'], Dist_df.loc[:,'BC_LSG'])
+plt.close()
 
 bc_dist=2.2
 bc_bc=0
@@ -401,9 +406,11 @@ print(per_lsg_bc_tot,' % of points')
 print(lsg_lsg,' LSG profiles of ',gyre_count,' are in the LSG')
 print(per_lsg_lsg_tot,' % of points')
 print('%%%%%%%%%%%%%%%%%\n')
+
 plt.figure()
 plt.contour(BX, BY, BathHeight, levels=[1000,1500,2000])
 plt.scatter(lon_bc_new,lat_bc_new, s=1)
 plt.scatter(lon_g_new,lat_g_new, s=1)
+plt.savefig(FigDir+'SortedProfiles.jpg'); plt.close()
 
 plt.show()

@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cartopy as ct
 from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter)
+import RandomFxns as RF
 
 #####################
 ## Some Parameters ##
@@ -26,7 +27,7 @@ lon_W= -80.00
 # Labrador Sea Region
 lab_N=65
 lab_S=48
-lab_E=-45
+lab_E=-30
 lab_W=-80
 
 fsize_x=10
@@ -111,6 +112,32 @@ for data_i in data_types:
         
         wmo_count=wmo_count+1
     
+    lat=AllData.loc[:,'Lat']
+    lon=AllData.loc[:,'Lon']
+    
+    plt.figure(2,figsize=(fsize_x,fsize_y))
+    NA = plt.axes(projection=ct.crs.PlateCarree())
+    NA.set_extent([lon_E, lon_W, lat_S, lat_N])
+    lonval=-1*np.arange(-lon_E,-lon_W+1,10)
+    latval=np.arange(lat_S,lat_N+1,10)
+    NA.set_xticks(lonval, crs=ct.crs.PlateCarree())
+    NA.set_yticks(latval, crs=ct.crs.PlateCarree())
+    lon_formatter = LongitudeFormatter()
+    lat_formatter = LatitudeFormatter()
+    NA.add_feature(ct.feature.COASTLINE)
+    NA.add_feature(ct.feature.OCEAN)
+    NA.xaxis.set_major_formatter(lon_formatter)
+    NA.yaxis.set_major_formatter(lat_formatter)
+    #plt.title('Trajectory for Float '+str(WMO))
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    if data_i ==0:
+        plt.scatter(lon, lat,s=1, color='blue')
+    elif data_i==1:
+        plt.scatter(lon, lat,s=1, color='orange')
+        plt.savefig('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_Map.jpg')
+        plt.clf(); plt.close()
+    
     print('\nThere are '+str(len(float_wmo))+' floats\n')
     # Calculate the mean at given time in specific region 
     MeanData=AllData.groupby(by='Date').mean()
@@ -127,44 +154,55 @@ for data_i in data_types:
         AllDates[i]=str(AllDates_df[i])
     AllDates=np.array(AllDates)
     
-    ## N16 ##
-    Ft_N16=np.zeros(len(AllDates_df))
-    Ft_N16[:]=np.NaN
-    Fd_N16=np.zeros(len(AllDates_df))
-    Fd_N16[:]=np.NaN
-    Fp_N16=np.zeros(len(AllDates_df))
-    Fp_N16[:]=np.NaN
-    Fc_N16=np.zeros(len(AllDates_df))
-    Fc_N16[:]=np.NaN
-    
-    ## L13 ##
-    Ft_L13=np.zeros(len(AllDates_df))
-    Ft_L13[:]=np.NaN
-    Fd_L13=np.zeros(len(AllDates_df))
-    Fd_L13[:]=np.NaN
-    Fp_L13=np.zeros(len(AllDates_df))
-    Fp_L13[:]=np.NaN
-    Fc_L13=np.zeros(len(AllDates_df))
-    Fc_L13[:]=np.NaN  
-    
     # Go through dates and match data to correct time period
-    for j in np.arange(len(date_list)):
-        date_ind=np.where(AllDates == date_list[j])
+    MeanData = RF.MatchData2Dates(alldates=AllDates, dates=date_list, Data=MeanData)
+    
+    #     ## N16 ##
+    # Ft_N16=np.zeros(len(AllDates_df))
+    # Ft_N16[:]=np.NaN
+    # Fd_N16=np.zeros(len(AllDates_df))
+    # Fd_N16[:]=np.NaN
+    # Fp_N16=np.zeros(len(AllDates_df))
+    # Fp_N16[:]=np.NaN
+    # Fc_N16=np.zeros(len(AllDates_df))
+    # Fc_N16[:]=np.NaN
+    
+    # ## L13 ##
+    # Ft_L13=np.zeros(len(AllDates_df))
+    # Ft_L13[:]=np.NaN
+    # Fd_L13=np.zeros(len(AllDates_df))
+    # Fd_L13[:]=np.NaN
+    # Fp_L13=np.zeros(len(AllDates_df))
+    # Fp_L13[:]=np.NaN
+    # Fc_L13=np.zeros(len(AllDates_df))
+    # Fc_L13[:]=np.NaN  
+    # for j in np.arange(len(date_list)):
+    #     date_ind=np.where(AllDates == date_list[j])
         
-        # Mean Data column values
-        # 1: WMO, 2: Lat, 3: Lon, 
-        # 4: Fp_l13, 5:Fc_L13, 6: Fd_L13, 7 Ft_L13
-        # 8: Fp_N16, 9: Fc_N16, 10: Fd_N16, 11 Ft_N16
-        Ft_N16[date_ind]=MeanData.iloc[j,11]
-        Fd_N16[date_ind]=MeanData.iloc[j,10]
-        Fp_N16[date_ind]=MeanData.iloc[j,8]
-        Fc_N16[date_ind]=MeanData.iloc[j,9]
+    #     # Mean Data column values
+    #     # 1: WMO, 2: Lat, 3: Lon, 
+    #     # 4: Fp_l13, 5:Fc_L13, 6: Fd_L13, 7 Ft_L13
+    #     # 8: Fp_N16, 9: Fc_N16, 10: Fd_N16, 11 Ft_N16
+    #     Ft_N16[date_ind]=MeanData.iloc[j,11]
+    #     Fd_N16[date_ind]=MeanData.iloc[j,10]
+    #     Fp_N16[date_ind]=MeanData.iloc[j,8]
+    #     Fc_N16[date_ind]=MeanData.iloc[j,9]
     
-        Ft_L13[date_ind]=MeanData.iloc[j,7]
-        Fd_L13[date_ind]=MeanData.iloc[j,6]
-        Fp_L13[date_ind]=MeanData.iloc[j,4]
-        Fc_L13[date_ind]=MeanData.iloc[j,5]
+    #     Ft_L13[date_ind]=MeanData.iloc[j,7]
+    #     Fd_L13[date_ind]=MeanData.iloc[j,6]
+    #     Fp_L13[date_ind]=MeanData.iloc[j,4]
+    #     Fc_L13[date_ind]=MeanData.iloc[j,5]
     
+    Ft_N16=MeanData.loc[:,'Ft_N16']
+    Fd_N16=MeanData.loc[:,'Fd_N16']
+    Fp_N16=MeanData.loc[:,'Fp_N16']
+    Fc_N16=MeanData.loc[:,'Fc_N16']
+
+    Ft_L13=MeanData.loc[:,'Ft_L13']
+    Fd_L13=MeanData.loc[:,'Fd_L13']
+    Fp_L13=MeanData.loc[:,'Fp_L13']
+    Fc_L13=MeanData.loc[:,'Fc_L13']
+        
     num_ticks=20
     xticks_ind=np.arange(0,(len(AllDates)//num_ticks*num_ticks)+1, step=len(AllDates)//num_ticks)
     xticks_labels=[]
@@ -249,7 +287,7 @@ for data_i in data_types:
     plt.savefig(FigDir+'L13_1wk.jpg')
     plt.close()
     
-    temp_Data_store=pd.DataFrame({'Ft_L13': Ft_L13,'Ft_L13_24hr': Ft_L13_24hr,'Ft_L13_1wk': Ft_L13_1wk,'Ft_N16': Ft_N16,'Ft_N16_24hr': Ft_N16_24hr,'Ft_N16_1wk': Ft_N16_1wk})
+    temp_Data_store=pd.DataFrame({'Ft_L13': Ft_L13,'Fd_L13': Fd_L13,'Fp_L13': Fp_L13,'Fc_L13': Fc_L13,'Ft_N16': Ft_N16,'Fp_N16': Fp_N16,'Fd_N16': Fd_N16, 'Fc_N16': Fc_N16})
     if data_i == 0:
         dates_BC=AllDates
         data_BC=temp_Data_store
@@ -259,7 +297,7 @@ for data_i in data_types:
 
 # Make complete date range for data
 print('\n%% Comparing Gas Flux Time Series %%\n')
-
+     
 min_flag = np.NaN
 # min_flag = 0; min date is LSG
 # min_flag = 1; min date is BC
@@ -282,73 +320,102 @@ for i in np.arange(len(dates_total_df)):
     dates_total[i]=str(dates_total_df[i])
 dates_total=np.array(dates_total)
 
-######### BC #########
-## N16 ##
-BC_N16=np.zeros(len(dates_total))
-BC_N16[:]=np.NaN
+# ######### BC #########
+# ## N16 ##
+# BC_N16=np.zeros(len(dates_total))
+# BC_N16[:]=np.NaN
 
-BC_N16_24hr=np.zeros(len(dates_total))
-BC_N16_24hr[:]=np.NaN
+# BC_N16_24hr=np.zeros(len(dates_total))
+# BC_N16_24hr[:]=np.NaN
 
-BC_N16_1wk=np.zeros(len(dates_total))
-BC_N16_1wk[:]=np.NaN
+# BC_N16_1wk=np.zeros(len(dates_total))
+# BC_N16_1wk[:]=np.NaN
 
-## L13 ##
-BC_L13=np.zeros(len(dates_total))
-BC_L13[:]=np.NaN
+# ## L13 ##
+# BC_L13=np.zeros(len(dates_total))
+# BC_L13[:]=np.NaN
 
-BC_L13_24hr=np.zeros(len(dates_total))
-BC_L13_24hr[:]=np.NaN
+# BC_L13_24hr=np.zeros(len(dates_total))
+# BC_L13_24hr[:]=np.NaN
 
-BC_L13_1wk=np.zeros(len(dates_total))
-BC_L13_1wk[:]=np.NaN
+# BC_L13_1wk=np.zeros(len(dates_total))
+# BC_L13_1wk[:]=np.NaN
+
+# ######### LSG #########
+# ## N16 ##
+# LSG_N16=np.zeros(len(dates_total))
+# LSG_N16[:]=np.NaN
+
+# LSG_N16_24hr=np.zeros(len(dates_total))
+# LSG_N16_24hr[:]=np.NaN
+
+# LSG_N16_1wk=np.zeros(len(dates_total))
+# LSG_N16_1wk[:]=np.NaN
+
+# ## L13 ##
+# LSG_L13=np.zeros(len(dates_total))
+# LSG_L13[:]=np.NaN
+
+# LSG_L13_24hr=np.zeros(len(dates_total))
+# LSG_L13_24hr[:]=np.NaN
+
+# LSG_L13_1wk=np.zeros(len(dates_total))
+# LSG_L13_1wk[:]=np.NaN
+
+# # BC floats
+# for i in np.arange(len(dates_BC)):
+#     date_ind=np.where(dates_total == dates_BC[i])
+#     # if dates_total[date_ind] != dates_BC[i]:
+#     #     print(date_ind)
+#     BC_L13[date_ind]=data_BC.iloc[i,0]
+#     BC_L13_24hr[date_ind]=data_BC.iloc[i,1]
+#     BC_L13_1wk[date_ind]=data_BC.iloc[i,2]
+    
+#     BC_N16[date_ind]=data_BC.iloc[i,3]
+#     BC_N16_24hr[date_ind]=data_BC.iloc[i,4]
+#     BC_N16_1wk[date_ind]=data_BC.iloc[i,5]
+
+# # LSG floats
+# for i in np.arange(len(dates_LSG)):
+#     date_ind=np.where(dates_total == dates_LSG[i])
+#     # if dates_total[date_ind] != dates_LSG[i]:
+#     #     print(date_ind)
+#     LSG_L13[date_ind]=data_LSG.iloc[i,0]
+#     LSG_L13_24hr[date_ind]=data_LSG.iloc[i,1]
+#     LSG_L13_1wk[date_ind]=data_LSG.iloc[i,2]
+    
+#     LSG_N16[date_ind]=data_LSG.iloc[i,3]
+#     LSG_N16_24hr[date_ind]=data_LSG.iloc[i,4]
+#     LSG_N16_1wk[date_ind]=data_LSG.iloc[i,5]
+
+BC_Data_ref=RF.MatchData2Dates(alldates=dates_total, dates=dates_BC,Data=data_BC)
 
 ######### LSG #########
-## N16 ##
-LSG_N16=np.zeros(len(dates_total))
-LSG_N16[:]=np.NaN
+# [LSG_L13, LSG_L13_24hr, LSG_L13_1wk, LSG_N16, LSG_N16_24hr, LSG_N16_1wk]=RF.MatchData2Dates(alldates=dates_total, dates=date_list_G, L13=Ft_L13_G, L13_24hr=Ft_L13_24hr_G, L13_1wk=Ft_L13_1wk_G,
+#                                                                                       N16=Ft_N16_G, N16_24hr=Ft_N16_24hr_G , N16_1wk=Ft_N16_1wk_G)
+LSG_Data_ref=RF.MatchData2Dates(alldates=dates_total, dates=dates_LSG,Data=data_LSG)
 
-LSG_N16_24hr=np.zeros(len(dates_total))
-LSG_N16_24hr[:]=np.NaN
+BC_L13=BC_Data_ref.loc[:,'Ft_L13']
+BC_N16=BC_Data_ref.loc[:,'Ft_N16']
+LSG_L13=LSG_Data_ref.loc[:,'Ft_L13']
+LSG_N16=LSG_Data_ref.loc[:,'Ft_N16']
 
-LSG_N16_1wk=np.zeros(len(dates_total))
-LSG_N16_1wk[:]=np.NaN
+## Moving Averages ##
+## Moving Average: 24 hrs ##
+# BC
+BC_N16_24hr=BC_Data_ref.loc[:,'Fd_N16'].rolling(int((24/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fp_N16'].rolling(int((24/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fc_N16'].rolling(int((24/6)),min_periods=1).mean()
+BC_L13_24hr=BC_Data_ref.loc[:,'Fd_L13'].rolling(int((24/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fp_L13'].rolling(int((24/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fc_L13'].rolling(int((24/6)),min_periods=1).mean()
 
-## L13 ##
-LSG_L13=np.zeros(len(dates_total))
-LSG_L13[:]=np.NaN
+BC_N16_1wk=BC_Data_ref.loc[:,'Fd_N16'].rolling(int((24*7/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fp_N16'].rolling(int((24*7/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fc_N16'].rolling(int((24*7/6)),min_periods=1).mean()
+BC_L13_1wk=BC_Data_ref.loc[:,'Fd_L13'].rolling(int((24*7/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fp_L13'].rolling(int((24*7/6)),min_periods=1).mean()+BC_Data_ref.loc[:,'Fc_L13'].rolling(int((24*7/6)),min_periods=1).mean()
 
-LSG_L13_24hr=np.zeros(len(dates_total))
-LSG_L13_24hr[:]=np.NaN
+# gyre
+LSG_N16_24hr=LSG_Data_ref.loc[:,'Fd_N16'].rolling(int((24/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fp_N16'].rolling(int((24/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fc_N16'].rolling(int((24/6)),min_periods=1).mean()
+LSG_L13_24hr=LSG_Data_ref.loc[:,'Fd_L13'].rolling(int((24/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fp_L13'].rolling(int((24/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fc_L13'].rolling(int((24/6)),min_periods=1).mean()
 
-LSG_L13_1wk=np.zeros(len(dates_total))
-LSG_L13_1wk[:]=np.NaN
+LSG_N16_1wk=LSG_Data_ref.loc[:,'Fd_N16'].rolling(int((24*7/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fp_N16'].rolling(int((24*7/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fc_N16'].rolling(int((24*7/6)),min_periods=1).mean()
+LSG_L13_1wk=LSG_Data_ref.loc[:,'Fd_L13'].rolling(int((24*7/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fp_L13'].rolling(int((24*7/6)),min_periods=1).mean()+LSG_Data_ref.loc[:,'Fc_L13'].rolling(int((24*7/6)),min_periods=1).mean()
 
-# BC floats
-for i in np.arange(len(dates_BC)):
-    date_ind=np.where(dates_total == dates_BC[i])
-    # if dates_total[date_ind] != dates_BC[i]:
-    #     print(date_ind)
-    BC_L13[date_ind]=data_BC.iloc[i,0]
-    BC_L13_24hr[date_ind]=data_BC.iloc[i,1]
-    BC_L13_1wk[date_ind]=data_BC.iloc[i,2]
-    
-    BC_N16[date_ind]=data_BC.iloc[i,3]
-    BC_N16_24hr[date_ind]=data_BC.iloc[i,4]
-    BC_N16_1wk[date_ind]=data_BC.iloc[i,5]
-
-# LSG floats
-for i in np.arange(len(dates_LSG)):
-    date_ind=np.where(dates_total == dates_LSG[i])
-    # if dates_total[date_ind] != dates_LSG[i]:
-    #     print(date_ind)
-    LSG_L13[date_ind]=data_LSG.iloc[i,0]
-    LSG_L13_24hr[date_ind]=data_LSG.iloc[i,1]
-    LSG_L13_1wk[date_ind]=data_LSG.iloc[i,2]
-    
-    LSG_N16[date_ind]=data_LSG.iloc[i,3]
-    LSG_N16_24hr[date_ind]=data_LSG.iloc[i,4]
-    LSG_N16_1wk[date_ind]=data_LSG.iloc[i,5]
 
 # Make figure labels
 num_ticks=20
@@ -358,6 +425,7 @@ for i in xticks_ind2:
     xticks_labels2=xticks_labels2+[dates_total[i]]
 
 FigDir_Compare='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries/CompareFlux_'
+
 ############ L13 ###############
 plt.figure(figsize=(fsize_x,fsize_y))
 plt.plot(dates_total,BC_L13)
@@ -499,49 +567,49 @@ ax.legend()
 plt.savefig(FigDir_Compare+'Month_L13_Raw_wErr.jpg')
 plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_L13_24hr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_L13_24hr.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_L13_24hr_wErr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_24hr'],capsize=2,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 24hr')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_L13_24hr_wErr.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_L13_1wk.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_L13_1wk.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_L13_1wk_wErr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_L13_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_L13_1wk'],capsize=2,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (L13) - 1wk')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_L13_1wk_wErr.jpg')
+# plt.close()
 
 ############## N16 ##################
 fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
@@ -566,48 +634,48 @@ ax.legend()
 plt.savefig(FigDir_Compare+'Month_N16_Raw_wErr.jpg')
 plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_N16_24hr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_N16_24hr.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_N16_24hr_wErr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_24hr'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_24hr'],capsize=2,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 24hr')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_N16_24hr_wErr.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_N16_1wk.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_N16_1wk.jpg')
+# plt.close()
 
-fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
-rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='BC')
-rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='LSG')
-ax.set_ylabel('Flux (mol/m^2-s)')
-ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
-ax.set_xticks(x)
-ax.set_xticklabels(MonthList)
-ax.legend()
-plt.savefig(FigDir_Compare+'Month_N16_1wk_wErr.jpg')
-plt.close()
+# fig, ax = plt.subplots(figsize=(fsize_x,fsize_y))
+# rects1 = ax.bar(x - width/2, BC_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=BC_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='BC')
+# rects2 = ax.bar(x + width/2, LSG_Data_M.loc[:,'Ft_N16_1wk'], width, yerr=LSG_Data_M_std.loc[:,'Ft_N16_1wk'],capsize=2,label='LSG')
+# ax.set_ylabel('Flux (mol/m^2-s)')
+# ax.set_title('Monthly Total Air Sea Gas Flux (N16) - 1wk')
+# ax.set_xticks(x)
+# ax.set_xticklabels(MonthList)
+# ax.legend()
+# plt.savefig(FigDir_Compare+'Month_N16_1wk_wErr.jpg')
+# plt.close()
 
 
