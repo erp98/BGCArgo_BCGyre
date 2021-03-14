@@ -10,10 +10,12 @@ import pandas as pd
 import xarray as xr
 import gsw
 import matplotlib.pyplot as plt
+from scipy import interpolate 
 
 def DetermineAdjusted(raw_data, raw_data_QC,a_data, a_data_QC):
     # raw_data = not adjusted BGC Argo data
     # a_data = adjuasted BGC Argo data
+    # Note! Update this function copying coreargo_fxns
     search_flag=0
     j=0
     adj_flag=np.NaN
@@ -211,6 +213,8 @@ def MatchData2Dates(alldates, dates, Data):
     return ReformattedData
 
 def MLD(Pres, Temp, Sal, Lat, Lon):
+
+    
     MinSurfP=0
     MaxSurfP=10
      
@@ -218,7 +222,7 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
     surf_flag=0
     surf_pres_i=[]
     
-    dense_offset=.3
+    dense_offset=.03
     while (j<len(Pres) and surf_flag ==0):
         if (Pres[j]>= MinSurfP and Pres[j] <= MaxSurfP):
             surf_pres_i=surf_pres_i+[j]
@@ -246,6 +250,7 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
         
         for k in np.arange(len(density)):
             density[k]=gsw.density.sigma0(SA=SA[k],CT=CT[k])
+
         
         surf_dense=np.nanmean(density[s_start:s_end])
         #print(surf_dense)
@@ -301,9 +306,48 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
         
     else:
         mld_pres=np.NaN
+        #mld_dense=np.NaN
     
-    return mld_pres
+    return mld_pres#, mld_dense
         
         
+def PresInterpolation(OriginalData, OriginalPressure, NewPressure, Pres_StepSize, NewData):
+    
+    for l in np.arange(NewData.shape[0]):
+    
+        if np.sum(np.isnan(OriginalData[l])) != len(OriginalData[l]):
+            
+            # Determine min and max values of pres range to use
+            if np.nanmin(OriginalPressure[l])%Pres_StepSize==0:
+                min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize)
+            else:
+                min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize+1)
+            
+            max_ind=int(np.nanmax(OriginalPressure[l])//Pres_StepSize)+1
+    
+            if max_ind > min_ind:
+                T_depth_interp=interpolate.interp1d(OriginalPressure[l], OriginalData[l])
+                NewData[l,min_ind:max_ind]=T_depth_interp(NewPressure[min_ind:max_ind])
+            else:
+                # There is only one data point 
+                min_ind=int(np.round(np.nanmin(OriginalPressure[l]))//Pres_StepSize)
+                NewData[l,min_ind]=OriginalData[l,np.argwhere(np.isnan(OriginalData[l])==False)[0][0]]
+                
+    return NewData
+
+def TimeInterpolatation(PresInterpData, PresInterpTime, NewTime, NewData):
+    
+    for l in np.arange(NewData.shape[0]):
+        # For each pressure level interp with time
+        
+        ## Temperature ##
+        T_p_level=PresInterpData[:,l].T
+        if np.sum(np.isnan(T_p_level)) != len(T_p_level):
+            T_time_interp=interpolate.interp1d(PresInterpTime, T_p_level)
+            NewData[l,:]=T_time_interp(NewTime)
+    
+    return NewData
+
+
         
             

@@ -15,9 +15,9 @@ import cartopy as ct
 import cartopy.crs as ccrs
 
 # Labrador Sea Region
-lab_N=65
+lab_N=70
 lab_S=48
-lab_E=-40
+lab_E=-30
 lab_W=-65
 
 fsize_x=10
@@ -90,7 +90,7 @@ minflux=-10**-6
 maxflux=10**-6
 m_size=5
 
-cmap_choice=cmo.balance
+cmap_choice='bwr'
 #plt.figure(figsize=(fsize_x,fsize_y))
 for i in np.arange(len(month_list)):
     r=i//3
