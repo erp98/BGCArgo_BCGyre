@@ -318,21 +318,27 @@ def PresInterpolation(OriginalData, OriginalPressure, NewPressure, Pres_StepSize
         if np.sum(np.isnan(OriginalData[l])) != len(OriginalData[l]):
             
             # Determine min and max values of pres range to use
-            if np.nanmin(OriginalPressure[l])%Pres_StepSize==0:
-                min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize)
-            else:
-                min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize+1)
+            min_ind=np.NaN
+            max_ind=np.NaN
+            #print(np.nanmin(OriginalPressure[l]))
+            if np.isnan(np.nanmin(OriginalPressure[l]))==False:
+                if np.nanmin(OriginalPressure[l])%Pres_StepSize==0:
+                    min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize)
+                else:
+                    min_ind=int(np.nanmin(OriginalPressure[l])//Pres_StepSize+1)
             
-            max_ind=int(np.nanmax(OriginalPressure[l])//Pres_StepSize)+1
-    
-            if max_ind > min_ind:
-                T_depth_interp=interpolate.interp1d(OriginalPressure[l], OriginalData[l])
-                NewData[l,min_ind:max_ind]=T_depth_interp(NewPressure[min_ind:max_ind])
-            else:
-                # There is only one data point 
-                min_ind=int(np.round(np.nanmin(OriginalPressure[l]))//Pres_StepSize)
-                NewData[l,min_ind]=OriginalData[l,np.argwhere(np.isnan(OriginalData[l])==False)[0][0]]
-                
+            if np.isnan(np.nanmax(OriginalPressure[l]))==False:
+                max_ind=int(np.nanmax(OriginalPressure[l])//Pres_StepSize)+1
+            
+            if np.isnan(min_ind) == False and np.isnan(max_ind)==False:
+                if max_ind > min_ind:
+                    T_depth_interp=interpolate.interp1d(OriginalPressure[l], OriginalData[l])
+                    NewData[l,min_ind:max_ind]=T_depth_interp(NewPressure[min_ind:max_ind])
+                else:
+                    # There is only one data point 
+                    min_ind=int(np.round(np.nanmin(OriginalPressure[l]))//Pres_StepSize)
+                    NewData[l,min_ind]=OriginalData[l,np.argwhere(np.isnan(OriginalData[l])==False)[0][0]]
+                    
     return NewData
 
 def TimeInterpolatation(PresInterpData, PresInterpTime, NewTime, NewData):
@@ -346,6 +352,26 @@ def TimeInterpolatation(PresInterpData, PresInterpTime, NewTime, NewData):
             T_time_interp=interpolate.interp1d(PresInterpTime, T_p_level)
             NewData[l,:]=T_time_interp(NewTime)
     
+    return NewData
+
+def PresInterpolation1m(OriginalData, OriginalPressure, NewPressure, Pres_StepSize, NewData):
+    
+    for l in np.arange(NewData.shape[0]):
+    
+        if np.sum(np.isnan(OriginalData[l])) != len(OriginalData[l]):
+            
+            T_depth_interp=interpolate.interp1d(OriginalPressure[l], OriginalData[l],fill_value='extrapolate')
+            NewData[l,:]=T_depth_interp(NewPressure)
+            
+            # if np.isnan(min_ind) == False and np.isnan(max_ind)==False:
+            #     if max_ind > min_ind:
+            #         T_depth_interp=interpolate.interp1d(OriginalPressure[l], OriginalData[l])
+            #         NewData[l,min_ind:max_ind]=T_depth_interp(NewPressure[min_ind:max_ind])
+            #     else:
+            #         # There is only one data point 
+            #         min_ind=int(np.round(np.nanmin(OriginalPressure[l]))//Pres_StepSize)
+            #         NewData[l,min_ind]=OriginalData[l,np.argwhere(np.isnan(OriginalData[l])==False)[0][0]]
+                    
     return NewData
 
 

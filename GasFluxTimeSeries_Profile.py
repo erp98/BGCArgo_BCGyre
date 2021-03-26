@@ -13,7 +13,7 @@ import cartopy as ct
 from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter)
 import RandomFxns as RF
 
-MODEL_TYPE=0
+MODEL_TYPE=1
 # 0: BC by Shape
 # 1: BC by bathymetry
 
@@ -31,8 +31,8 @@ elif MODEL_TYPE ==1:
 
 lat_N=65.000
 lat_S= 48.00
-lon_E= -30.00
-lon_W= -80.00
+lon_E= -45.00
+lon_W= -70.00
 
 fsize_x=10
 fsize_y=6

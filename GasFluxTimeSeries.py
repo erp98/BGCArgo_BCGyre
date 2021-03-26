@@ -17,6 +17,7 @@ import RandomFxns as RF
 #####################
 ## Some Parameters ##
 #####################
+badfloat=4901141
 
 # N Atlantic Region
 lat_N=80.000
@@ -27,8 +28,8 @@ lon_W= -80.00
 # Labrador Sea Region
 lab_N=65
 lab_S=48
-lab_E=-30
-lab_W=-80
+lab_E=-45
+lab_W=-70
 
 fsize_x=10
 fsize_y=6
@@ -71,18 +72,24 @@ for data_i in data_types:
     
     # If BC floats, crop data so it is in Lab Sea
     
-    if data_i == 0:
-        AllData.loc[AllData.loc[:,'Lat']>lab_N,:]=np.NaN
-        AllData.loc[AllData.loc[:,'Lat']<lab_S,:]=np.NaN
-        AllData.loc[AllData.loc[:,'Lon']>lab_E,:]=np.NaN
-        AllData.loc[AllData.loc[:,'Lon']<lab_W,:]=np.NaN
-        AllData=AllData.dropna()
-
+    AllData.loc[AllData.loc[:,'Lat']>lab_N,:]=np.NaN
+    AllData.loc[AllData.loc[:,'Lat']<lab_S,:]=np.NaN
+    AllData.loc[AllData.loc[:,'Lon']>lab_E,:]=np.NaN
+    AllData.loc[AllData.loc[:,'Lon']<lab_W,:]=np.NaN
+    
+    # Remove bad float data
+    AllData.loc[AllData.loc[:,'WMO']==badfloat,:]=np.NaN
+    
+    AllData=AllData.dropna()
+    
+    
     # Plot float trajectories
     float_wmo= AllData.loc[:,'WMO'].unique().tolist()
     wmo_count =0
     print('\n%% Plotting Trajectories %%\n')
     for wmo in float_wmo:
+        
+        
         lat=AllData.loc[AllData.loc[:,'WMO']==wmo,'Lat'].to_numpy()
         lon=AllData.loc[AllData.loc[:,'WMO']==wmo,'Lon'].to_numpy()
         

@@ -15,9 +15,9 @@ import cartopy as ct
 import cartopy.crs as ccrs
 
 # Labrador Sea Region
-lab_N=70
+lab_N=65
 lab_S=48
-lab_E=-30
+lab_E=-45
 lab_W=-65
 
 fsize_x=10
@@ -217,6 +217,8 @@ fig.colorbar(cm_cbr, ax=axs[:, :], location='right')
 #plt.colorbar(cm_cbr,ax=ax, location = right)
 plt.subplots_adjust(right=.75)#,hspace=0.9, wspace=0.4)
 plt.savefig(FigDir+'Seasonaly.jpg')    
+
+plt.close()
 
 for h in np.arange(len(Seasons)):
     s=Seasons[h]

@@ -33,9 +33,9 @@ ArgoWMO=ArgoDataFrames.loc[:,'FloatWMO']
 FileNames=ArgoDataFrames.loc[:,'FileName']
 
 good_QC=[1,2,5,8]
-lat_N=80.000
-lat_S= 40.00
-lon_E= -30.00
+lat_N=70.000
+lat_S= 48.00
+lon_E= -45.00
 lon_W= -70.00
 
 figx=10
@@ -63,10 +63,10 @@ pres_range=np.arange(0,2001,step_size)
 
 refdate=datetime(1990,1,1)
 
-TSOsat=pd.DataFrame({'Temp':[np.NaN],'Sal':[np.NaN],'Oxy':[np.NaN],'OxySat':[np.NaN],'Sigma0':[np.NaN]})
+TSOsat=pd.DataFrame({'WMO': [np.NaN],'Date':[np.NaN],'Lat':[np.NaN],'Lon': [np.NaN],'Pres':[np.NaN],'Temp':[np.NaN],'Sal':[np.NaN],'Oxy':[np.NaN],'OxySat':[np.NaN],'Sigma0':[np.NaN]})
 tic1=time.time()
 for i in np.arange(len(ArgoWMO)):
-#for i in [12]:
+#for i in [43]:
     tic2=time.time()
     
     dac=FileNames[i].split('/')[0]
@@ -230,8 +230,9 @@ for i in np.arange(len(ArgoWMO)):
                 lon_interp=lon_interp_time(new_dates_num)
                 
                 for l in np.arange(lat_array_pd.shape[0]):
-                    lat_array_pd[l,:]=lat_interp[l]
-                    lon_array_pd[l,:]=lon_interp[l]
+                    # rows: Pressure, columns dates 
+                    lat_array_pd[l,:]=lat_interp.T
+                    lon_array_pd[l,:]=lon_interp.T
                     
                 P_PD=np.zeros(T_PD.shape)
                 for l in np.arange(len(new_dates)):
@@ -474,15 +475,19 @@ for i in np.arange(len(ArgoWMO)):
                 plt.savefig(SectionFigDir+str(WMO)+'_DensityAxis_OxygenSat.jpg')
                 plt.clf(); plt.close()
                 
+                wmo_list=np.zeros(len(date_list.flatten()))
+                wmo_list[:]=WMO
                 # Save all T-S-O-Osat data
-                df_temp=pd.DataFrame({'Temp':temp.flatten(),'Sal':sal.flatten(),'Oxy':doxy.flatten(),'OxySat':oxy_sat.flatten(),'Sigma0':density.flatten()})
+                df_temp=pd.DataFrame({'WMO':wmo_list,'Date':date_list.flatten(),'Lat':lat_array.flatten(), 'Lon':lon_array.flatten(),'Pres':pres.flatten(),'Temp':temp.flatten(),'Sal':sal.flatten(),'Oxy':doxy.flatten(),'OxySat':oxy_sat.flatten(),'Sigma0':density.flatten()})
                 df_temp=df_temp.dropna()
                 TSOsat=TSOsat.append(df_temp)
+                TSOsat=TSOsat.dropna()
     
     toc2=time.time()
     print('Time elapsed (sec): ', toc2-tic2)
 
 TSOsat=TSOsat.dropna()
+TSOsat.to_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/Spice.csv')
 
 plt.figure(figsize=(figx, figy))
 plt.scatter(TSOsat.loc[:,'Temp'],TSOsat.loc[:,'Sal'],c=TSOsat.loc[:,'OxySat'],vmin=minOsat, vmax=maxOsat,cmap=cmo.balance)
