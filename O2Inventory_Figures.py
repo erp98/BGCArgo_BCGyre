@@ -21,18 +21,26 @@ lab_S=48
 lab_E=-45
 lab_W=-65
 
-FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Inventory/'
+PresLevel=100
+FigDir='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Inventory/Pres_'+str(PresLevel)+'_'
 cmap_choice=cmo.dense 
 #cmap_choice='winter'
 
-minval=450
-maxval=550
+minval=25
+maxval=35
 
-O2invData=pd.read_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2WaterColumn_1m.csv')
+mindiff=-3
+maxdiff=3
+
+badfloat=4901141
+
+O2invData=pd.read_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/Pres_'+str(PresLevel)+'_O2WaterColumn_1m.csv')
 O2invData.loc[O2invData.loc[:,'O2Inv']<0,'O2Inv']=np.NaN
+O2invData.loc[O2invData.loc[:,'WMO']==badfloat,:]=np.NaN
 O2invData=O2invData.dropna()
 new_ind=np.arange(O2invData.shape[0])
 O2invData=O2invData.set_index(pd.Index(list(new_ind)))
+    
 
 # Add months
 Months=np.zeros(O2invData.shape[0])
@@ -64,7 +72,7 @@ fig, axs = plt.subplots(1,1,figsize=(10,6))
 ax=plt.subplot(1,1,1,projection=ccrs.PlateCarree())
 ax.coastlines('50m')
 ax.set_extent([lab_W, lab_E, lab_S, lab_N], ccrs.PlateCarree())
-cm_cbr=ax.scatter(lon, lat, c=DiffInv,vmin=-100, vmax=100, marker ='o', s=2,cmap=cmo.balance) #cmo.balance
+cm_cbr=ax.scatter(lon, lat, c=DiffInv,vmin=mindiff, vmax=maxdiff, marker ='o', s=2,cmap=cmo.balance) #cmo.balance
 ax.set_title('Difference From Equilibrium Oxygen Inventory (mol/m2)')
 fig.colorbar(cm_cbr)
 plt.savefig(FigDir+'Map_Inventory_DiffEq_Total.jpg')
@@ -193,7 +201,7 @@ for h in np.arange(len(Seasons)):
     ax=plt.subplot(2,2,h+1,projection=ccrs.PlateCarree())
     ax.coastlines('50m')
     ax.set_extent([lab_W, lab_E, lab_S, lab_N], ccrs.PlateCarree())
-    cm_cbr=ax.scatter(lon_s_tot, lat_s_tot, c=O2diff_s_tot, vmin=-100, vmax=100, marker ='o', s=2,cmap=cmo.balance)  #cmo.balance
+    cm_cbr=ax.scatter(lon_s_tot, lat_s_tot, c=O2diff_s_tot, vmin=mindiff, vmax=maxdiff, marker ='o', s=2,cmap=cmo.balance)  #cmo.balance
     ax.set_title(SeasonType[h])
 
 fig.colorbar(cm_cbr, ax=axs[:, :], location='right')
@@ -272,7 +280,22 @@ ax.set_ylabel('O2 Inventory (mol/m2)')
 ax.set_xticks(x)
 ax.set_xticklabels(MonthList)
 ax.legend()
+#plt.ylim((400,600))
 plt.savefig(FigDir+'TimeSeries_Monthly.jpg')
+plt.close()
+
+fig, ax = plt.subplots(figsize=(10,8))
+rects1 = ax.bar(x - 3*width/4, BC_Mean.loc[:,'O2Inv'], width/2,yerr=BC_Std.loc[:,'O2Inv'],capsize=2, label='BC')
+rects3 = ax.bar(x - width/4, G_Mean.loc[:,'O2Inv'], width/2,yerr=G_Std.loc[:,'O2Inv'],capsize=2,label='LSG')
+rects2 = ax.bar(x + width/4, BC_Mean.loc[:,'O2EqInv'], width/2,yerr=BC_Std.loc[:,'O2EqInv'],capsize=2, label='BC Eq')
+rects4 = ax.bar(x + 3*width/4, G_Mean.loc[:,'O2EqInv'], width/2,yerr=G_Std.loc[:,'O2EqInv'],capsize=2,label='LSG Eq')
+ax.set_ylabel('O2 Inventory (mol/m2)')
+#ax.set_title('Monthly Total Air Sea Gas Flux (L13) - Raw')
+ax.set_xticks(x)
+ax.set_xticklabels(MonthList)
+ax.legend()
+#plt.ylim((400,600))
+plt.savefig(FigDir+'TimeSeries_Monthly_wEq.jpg')
 plt.close()
 
 fig, ax = plt.subplots(figsize=(10,8))

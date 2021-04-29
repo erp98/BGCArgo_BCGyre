@@ -68,7 +68,8 @@ dense_ss=0.05
 dense_bins=np.arange(mindense, maxdense+dense_ss,dense_ss)
 
 step_size=1
-depth_range=np.arange(0,1751,step_size)
+interp_pres=100
+depth_range=np.arange(0,interp_pres+step_size,step_size)
 
 refdate=datetime(1990,1,1)
 
@@ -202,7 +203,7 @@ for i in np.arange(len(ArgoWMO)):
                 plt.colorbar()
                 plt.xticks(rotation=45)
                 plt.title('Temperature Float: '+str(WMO))
-                plt.savefig(SectionFigDir+str(WMO)+'_Interp_Temperature.jpg')
+                plt.savefig(SectionFigDir+'Pres_'+str(interp_pres)+'_'+str(WMO)+'_Interp_Temperature.jpg')
                 plt.clf(); plt.close()
                 
                 plt.figure(figsize=(figx, figy))
@@ -211,7 +212,7 @@ for i in np.arange(len(ArgoWMO)):
                 plt.colorbar()
                 plt.xticks(rotation=45)
                 plt.title('Salinity Float: '+str(WMO))
-                plt.savefig(SectionFigDir+str(WMO)+'_Interp_Salinity.jpg')
+                plt.savefig(SectionFigDir+'Pres_'+str(interp_pres)+'_'+str(WMO)+'_Interp_Salinity.jpg')
                 plt.clf(); plt.close()
                 
                 plt.figure(figsize=(figx, figy))
@@ -220,7 +221,7 @@ for i in np.arange(len(ArgoWMO)):
                 plt.colorbar()
                 plt.xticks(rotation=45)
                 plt.title('Oxygen Float: '+str(WMO))
-                plt.savefig(SectionFigDir+str(WMO)+'_Interp_Oxygen.jpg')
+                plt.savefig(SectionFigDir+'Pres_'+str(interp_pres)+'_'+str(WMO)+'_Interp_Oxygen.jpg')
                 plt.clf(); plt.close()
                 
                 # Calculate oxygen saturation
@@ -263,7 +264,7 @@ for i in np.arange(len(ArgoWMO)):
                 plt.colorbar()
                 plt.xticks(rotation=45)
                 plt.title('Oxygen Saturation Float: '+str(WMO))
-                plt.savefig(SectionFigDir+str(WMO)+'_Interp_OxygenSaturation.jpg')
+                plt.savefig(SectionFigDir+'Pres_'+str(interp_pres)+'_'+str(WMO)+'_Interp_OxygenSaturation.jpg')
                 plt.clf(); plt.close()
                 
                 plt.figure(figsize=(figx, figy))
@@ -272,7 +273,7 @@ for i in np.arange(len(ArgoWMO)):
                 plt.colorbar()
                 plt.xticks(rotation=45)
                 plt.title('Sigma 0 Float: '+str(WMO))
-                plt.savefig(SectionFigDir+str(WMO)+'_Interp_Density.jpg')
+                plt.savefig(SectionFigDir+'Pres_'+str(interp_pres)+'_'+str(WMO)+'_Interp_Density.jpg')
                 plt.clf(); plt.close()
                 
                 # plot cross sections
@@ -333,7 +334,7 @@ for i in np.arange(len(ArgoWMO)):
     print('Time elapsed (sec): ', toc2-tic2)
 
 O2Inv=O2Inv.dropna()
-O2Inv.to_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/O2WaterColumn_1m.csv')
+O2Inv.to_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/'+'Pres_'+str(interp_pres)+'_O2WaterColumn_1m.csv')
 
 # plt.figure(figsize=(figx, figy))
 # plt.scatter(TSOsat.loc[:,'Temp'],TSOsat.loc[:,'Sal'],c=TSOsat.loc[:,'OxySat'],vmin=minOsat, vmax=maxOsat,cmap=cmo.balance)

@@ -251,10 +251,9 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
         for k in np.arange(len(density)):
             density[k]=gsw.density.sigma0(SA=SA[k],CT=CT[k])
 
-        
         surf_dense=np.nanmean(density[s_start:s_end])
         #print(surf_dense)
-        mld_dense=surf_dense+dense_offset
+        rho_mld=surf_dense+dense_offset
         
         #print(mld_dense)
         # Find MLD
@@ -262,24 +261,24 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
         inter_flag=np.NaN
         mld_pres=np.NaN
         
-        L_P=np.NaN
-        L_D=np.NaN
-        M_P=np.NaN
-        M_D=np.NaN
+        P_L=np.NaN
+        rho_L=np.NaN
+        P_D=np.NaN
+        rho_D=np.NaN
         
         j = s_end -1
         # Start search at base of surface layer
         while(j<len(density) and mld_flag ==0):
         
-            if density[j] == mld_dense:
+            if density[j] == rho_mld:
                 mld_pres=Pres[j]
                 mld_flag=1
-            elif density[j]<mld_dense:
-                L_P=Pres[j]
-                L_D=density[j]
-            elif density[j]>mld_dense:
-                M_P=Pres[j]
-                M_D=density[j]
+            elif density[j]<rho_mld:
+                P_L=Pres[j]
+                rho_L=density[j]
+            elif density[j]>rho_mld:
+                P_D=Pres[j]
+                rho_D=density[j]
                 inter_flag=1
                 mld_flag=1
             
@@ -293,7 +292,8 @@ def MLD(Pres, Temp, Sal, Lat, Lon):
             mld_pres=np.nanmax(Pres)
         elif (np.isnan(mld_flag)== False and inter_flag == 1):
             # Need to interpolate to get MLD
-            mld_pres=M_D-(((M_D-mld_dense)/(M_D-L_D))*(M_P-L_P))
+            #mld_pres=M_D-(((M_D-mld_dense)/(M_D-L_D))*(M_P-L_P))
+            mld_pres = P_D-(P_D - P_L)*((rho_D-rho_mld)/(rho_D-rho_L))
         elif (np.isnan(mld_flag)== False and inter_flag == 0):
             mld_pres=mld_pres
         else:
@@ -376,4 +376,25 @@ def PresInterpolation1m(OriginalData, OriginalPressure, NewPressure, Pres_StepSi
 
 
         
-            
+def WMODacPair():
+    PairFile = '/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/TextFiles/DacWMO_NAtlantic.txt'
+    dacs = []
+    wmos = []
+    
+    count = 0
+    with open(PairFile) as fp:
+        Lines = fp.readlines()
+        for line in Lines:
+            count += 1
+            x=line.strip()
+            xs = x.split('/')
+            dacs=dacs+[xs[0]]
+            wmos = wmos + [xs[1]]
+    
+    Dict = {}
+    for i in np.arange(len(dacs)):
+        Dict[int(wmos[i])]=dacs[i]
+    
+    return Dict
+        
+

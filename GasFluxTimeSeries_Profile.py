@@ -27,8 +27,34 @@ elif MODEL_TYPE ==1:
     GyreData=pd.read_csv('/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/CSVFiles/BC_Bath/GasFluxData_Gyre.csv')
     FigDir_Compare='/Users/Ellen/Documents/GitHub/BGCArgo_BCGyre/Figures/O2Flux_TimeSeries_BC_Bath/CompareFlux_'
     print('\nUSING BATHYMETRY MODEL\n')
-    
+   
+# Remove MLD data for now because are nan values
+BCData=BCData.drop(['MLD'],axis=1)
+GyreData=GyreData.drop(['MLD'],axis=1)
 
+bcfloats=BCData.loc[:,'FloatWMO'].unique().tolist()
+gyrefloats=GyreData.loc[:,'FloatWMO'].unique().tolist()
+
+# remove bad float
+badfloat=4901141
+
+bcf_check=0
+gf_check=0
+
+for l in bcfloats:
+    if l == badfloat:
+        bcf_check=1
+for l in gyrefloats:
+    if l ==badfloat:
+        gf_check=1
+
+if bcf_check==1:
+    BCData.loc[BCData.loc[:,'FloatWMO']==badfloat,:]=np.NaN
+    BCData=BCData.dropna()
+if gf_check==1:
+    GyreData.loc[GyreData.loc[:,'FloatWMO']==badfloat,:]=np.NaN
+    GyreData=GyreData.dropna()
+        
 lat_N=65.000
 lat_S= 48.00
 lon_E= -45.00
